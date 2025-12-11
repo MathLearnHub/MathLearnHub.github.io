@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us | Sz Games</title>
+    <link rel="icon" href="https://github.com/sz-games/home/blob/main/G.png?raw=true" />
+    <script
+      defer
+      data-domain="sz-games.github.io"
+      src="https://stats.senty.com.au/js/script.outbound-links.pageview-props.tagged-events.js"
+    ></script>
+    <script>
+      window.plausible =
+        window.plausible ||
+        function () {
+          ;(window.plausible.q = window.plausible.q || []).push(arguments)
+        }
+    </script>
+    <style>
+      body {
+        background: rgb(41, 41, 41);
+        margin: 0;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        overflow: hidden;
+      }
+
+      .game-covers {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        padding: 20px;
+        opacity: 0.2;
+      }
+
+      .cover {
+        aspect-ratio: 1;
+        background-size: cover;
+        background-position: center;
+        border-radius: 10px;
+        transform: rotate(var(--rotation));
+        animation: float 6s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: rotate(var(--rotation)) translateY(0);
+        }
+        50% {
+          transform: rotate(var(--rotation)) translateY(-20px);
+        }
+      }
+
+      .contact-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        background: rgba(32, 32, 32, 0.9);
+        padding: 40px;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        z-index: 2;
+        width: 90%;
+        max-width: 700px;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .logo img {
+        width: 50px;
+        height: 50px;
+      }
+
+      h1 {
+        font-size: 36px;
+        font-weight: bold;
+        margin: 0 0 20px 0;
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      p {
+        font-size: 18px;
+        margin: 0 0 30px 0;
+        line-height: 1.5;
+      }
+
+      iframe {
+        width: 100%;
+        max-width: 640px;
+        height: 650px;
+        border: none;
+        border-radius: 10px;
+        background-color: #f0f0f0;
+      }
+
+      .home-link {
+        display: inline-block;
+        padding: 15px 35px;
+        background: linear-gradient(45deg, #ff3d3d, #ff8c00);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: bold;
+        font-size: 18px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(255, 61, 61, 0.4);
+        position: relative;
+        overflow: hidden;
+        margin-top: 20px;
+      }
+
+      .home-link:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(255, 61, 61, 0.6);
+        background: linear-gradient(45deg, #ff8c00, #ff3d3d);
+      }
+
+      .home-link::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+      }
+
+      @keyframes shine {
+        0% {
+          transform: translateX(-100%) rotate(45deg);
+        }
+        100% {
+          transform: translateX(100%) rotate(45deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .contact-container {
+          padding: 30px 20px;
+          width: 90%;
+        }
+
+        iframe {
+          height: 700px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="game-covers">
+      <div class="cover" style="--rotation: -5deg; background-image: url('cover/slope.webp')"></div>
+      <div class="cover" style="--rotation: 5deg; background-image: url('cover/Bitlife.png')"></div>
+      <div class="cover" style="--rotation: -3deg; background-image: url('cover/Minecraft.png')"></div>
+      <div class="cover" style="--rotation: 7deg; background-image: url('cover/gunnn.png')"></div>
+      <div class="cover" style="--rotation: 3deg; background-image: url('cover/lol.jpeg')"></div>
+      <div class="cover" style="--rotation: -7deg; background-image: url('cover/BASKETBRO.png')"></div>
+      <div class="cover" style="--rotation: 2deg; background-image: url('cover/fnaf1.jpeg')"></div>
+      <div class="cover" style="--rotation: -4deg; background-image: url('cover/fnaf2.webp')"></div>
+      <div class="cover" style="--rotation: 6deg; background-image: url('cover/motox3m.png')"></div>
+      <div class="cover" style="--rotation: -2deg; background-image: url('cover/roblox.jpeg')"></div>
+      <div class="cover" style="--rotation: 4deg; background-image: url('cover/retrobowl.avif')"></div>
+      <div class="cover" style="--rotation: -6deg; background-image: url('cover/pvz.png')"></div>
+    </div>
+
+    <div class="contact-container">
+      <div class="logo">
+        <img src="https://github.com/sz-games/sz-games.github.io/blob/main/G.png?raw=true" alt="Sz Games Logo" />
+        <h1>Contact Us</h1>
+      </div>
+      <p>
+        If you have any questions or feedback, want to submit a game or leave a review, please use the form below to get
+        in touch with us.
+      </p>
+
+      <iframe
+        src="https://docs.google.com/forms/d/e/1FAIpQLScc5KUKSzERyIQb8FfF8xb4w0d6YxD4oE4RV8gvqygR1BKq3w/viewform?embedded=true"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+        >Loading…</iframe
+      >
+
+      <a href="https://sage563.github.io/MathLearnHub/theactualindex.html" class="home-link">🎮 Back to Games 🎮</a>
+      <div class="discord-container" style="margin: 20px; text-align: center">
+        <p style="font-size: 16px; margin-bottom: 10px; color: #7289da">
+          <a
+            href="https://discord.gg/XaEPUtUZ7G"
+            style="
+              text-decoration: none;
+              color: white;
+              display: inline-flex;
+              align-items: center;
+              background-color: #7289da;
+              padding: 8px 15px;
+              border-radius: 8px;
+              transition: all 0.3s ease;
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              style="margin-right: 8px; fill: white"
+            >
+              <path
+                d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"
+              />
+            </svg>
+            Join Our Discord
+          </a>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

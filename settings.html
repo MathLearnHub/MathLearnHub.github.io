@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script defer data-domain="sz-games.github.io" src="https://stats.senty.com.au/js/script.outbound-links.pageview-props.tagged-events.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+  
+
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C78TXR0XFK"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C78TXR0XFK');
+</script>
+
+
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="https://github.com/sz-games/home/blob/main/G.png?raw=true">
+<title>Settings - Sz Games</title>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
+<script>
+  
+</script>
+<script src="./GobalSettings.js"></script>
+<style>
+  .Preset {
+    cursor: pointer;
+
+  }
+  .Preset:hover {
+    transition: 0.5s;
+    transform: scale(1.1);
+  }
+</style>
+<script>
+  fetch("./cloak.json")
+  .then((response) => response.json())
+  .then((data) => {
+    const container = document.getElementById("buttons-container");
+
+    data.forEach((link) => {
+      const img = document.createElement("img");
+      img.className = "presets";
+      img.style.width = "50px";
+      img.style.height = "50px";
+      img.style.borderRadius = "50%";
+      img.classList.add('Preset')
+      img.style.objectFit = "cover";
+      img.style.borderColor = "black";
+
+      const faviconUrl = `https://www.google.com/s2/favicons?sz=64&domain=${link.favicon}`;
+      img.src = link.favicon;
+
+      // Check if the image failed to load, and fallback to link.favicon if it did
+      img.onerror = () => {
+        img.src = faviconUrl;
+      };
+
+      img.addEventListener("click", function () {
+        setTitle(link.title);
+        setFavicon(link.favicon);
+      });
+      container.appendChild(img);
+    });
+  });
+
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+ <!--PageScript1-->
+ <script id="CHECK">
+  function getCookie2(name) {
+const cookieName = name + "=";
+const cookies = document.cookie.split(';');
+for (let i = 0; i < cookies.length; i++) {
+    let cookie = cookies[i];
+    while (cookie.charAt(0) === ' ') {
+        cookie = cookie.substring(1);
+    }
+    if (cookie.indexOf(cookieName) === 0) {
+        return cookie.substring(cookieName.length, cookie.length);
+    }
+}
+return '';
+}
+
+
+let Setting14bu = getCookie2("PagePrevent");
+
+function checkPageClose(event) {
+
+
+    event.returnValue = "Prevent Page Close Is Active, You Can Click Off Of This";
+
+
+
+}
+function checkPageClose2() {
+if(Setting14bu==="true") {
+
+    window.onbeforeunload = function(event) {
+        // return a string to prevent the page from closing
+        event.preventDefault();
+        return "Prevent Page Close Is Active, You Can Click Off Of This";
+    };
+    window.addEventListener("beforeunload", checkPageClose);
+
+} 
+if(Setting14bu==="false") {
+
+}
+}
+console.log('CookiePAGE Value: ' + Setting14bu + "SzGames-Scripts Loaded")
+checkPageClose2()
+
+</script>
+<!--PageScript1-->
+</head>
+
+<style>
+
+
+body {
+  background: rgb(39, 39, 39);
+  font-family: Arial, Helvetica, sans-serif;
+  background-repeat: none;
+  background-size: cover;
+}
+
+
+img {
+  
+  margin: 10px;
+position: relative;
+z-index: 1;
+}
+
+.btn-group button {
+  background-color: black; /* Green background */
+ 
+  color: white; /* White text */
+  padding: 10px 24px; /* Some padding */
+  cursor: pointer; /* Pointer/hand icon */
+  float: left; /* Float the buttons side by side */
+}
+
+/* Clear floats (clearfix hack) */
+.btn-group:after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.btn-group button:not(:last-child) {
+  border-right: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+  background-color: grey;
+}
+
+/* Header/Logo Title */
+.header-halloween {
+  padding: 60px;
+  text-align: center;
+  background: linear-gradient(to bottom right, #ff7d31, rgb(39, 39, 39), rgb(39, 39, 39));
+  color: white;
+  width: auto;
+  font-size: 30px;
+  position: relative;
+z-index: 1;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 15px;
+}
+
+.header {
+  position: relative;
+z-index: 1;
+  padding: 60px;
+  text-align: center; 
+  color: white;
+  width: auto;
+  font-size: 30px;
+ 
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 15px;
+}
+
+/* Page Content */
+
+</style>
+
+
+<body>
+
+<style>
+    .game {
+        position: absolute;
+color: white;
+
+  transform: scale(1.8);
+  z-index: 3;
+  font-family: Arial, Helvetica, sans-serif;
+    }
+    .fade {
+        position: absolute;
+        background: linear-gradient(to bottom, #1d1d1d, #1d1d1d5d, rgba(39, 39, 39, 0));
+        width: 300px;
+        height: 150px;
+     border-radius: 15px;
+    }
+
+
+
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 85vw;
+  margin: 1rem auto;
+}
+
+
+.bg,
+.overlay {
+  text-align: center;
+}
+
+img,
+.overlay {
+  transition: .3s all;
+  border-radius: 3px;
+}
+
+.day {
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+  color: white;
+  position: relative;
+z-index: 1;
+}
+
+@keyframes rise{
+  0%{
+    bottom:-100px;
+    transform:translateX(0);
+  }
+  50%{
+    transform:translate(100px);
+  }
+  100%{
+    bottom:1080px;
+    transform:translateX(-200px);
+  }
+}
+
+.hello img {
+            width: 100%;
+            transition: 0.5s all ease-in-out;
+        }
+     
+        .hello:hover img {
+          transform-origin: top;
+            transform: scale(1.1);
+        }
+
+
+</style>
+<style>
+  .topnav {
+  overflow: hidden;
+  position: fixed;
+  z-index: 5;
+  border-radius: 30px;
+  background-color: #333;
+}
+
+p {
+  transition: 0.5s;
+}
+
+.topnav p {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+
+@keyframes move {
+  0% {
+    transform: translate(-100%, -100%);
+  }
+  100% {
+    transform: translate(100%, 100%);
+  }
+}
+.button {
+ --color: #979797;
+ padding: 0.8em 1.7em;
+ background-color: transparent;
+ border-radius: .3em;
+ position: relative;
+ overflow: hidden;
+ width: 100%;
+ cursor: pointer;
+ transition: .5s;
+ font-weight: 400;
+ font-size: 17px;
+ border: 1px solid;
+ font-family: inherit;
+ text-transform: uppercase;
+ color: var(--color);
+ z-index: 1;
+}
+.button:hover {
+  color: white;
+
+}
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: white;
+text-align: center; 
+ opacity: 1; /* Firefox */
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: white;
+  text-align: center; 
+ opacity: 1; /* Firefox */
+}
+
+::-ms-input-placeholder { /* Microsoft Edge */
+  color: white;
+  text-align: center; 
+ opacity: 1; /* Firefox */
+}
+.BTN {
+  transition: 0.5s;
+  transform-origin: center;
+
+}
+.BTN:hover {
+  transform: translate(-50%, -0%) scale(1.1) !important;
+  overflow: hidden;
+  transform-origin: center;
+}
+</style>
+
+
+
+
+ 
+ 
+
+
+      <!--div class="header">
+        <img src="https://github.com/sz-games/home/blob/main/G.png?raw=true" style="position: relative; width: 150px; height: 150px;" alt="img">
+        <h1>About</h1>
+      </div-->
+  
+      
+
+
+
+<!--div class="hello" style=" margin-right: auto; margin-left: auto; width: 430px;">
+  <a href="https://sites.google.com/view/fnf-unblockedhehe/home">
+      <p class="game" style="left: 105px;" >Infinite Tower</p>
+      <div class="fade" ></div>
+   <img style="border-radius: 15px; width: 400px;" src="https://github.com/sz-games/sz-games.github.io/blob/main/cover/fn.png?raw=true" alt="game">
+  </a>
+ 
+  
+</div-->
+<style>
+  @keyframes OUT {
+    from {position: absolute; transition: 0.5s; opacity: 1; left: 0px; }
+    to{position: absolute; transition: 0.5s; opacity: 0; left: 100%; }
+  }
+  @keyframes IN {
+    from {position: absolute; transition: 0.5s; opacity: 0; left: -100%; }
+    to{position: absolute; transition: 0.5s; opacity: 1; left: 0px; }
+  }
+
+  @keyframes OUT2 {
+    from {position: absolute; transition: 0.5s; opacity: 1; left: 0px; }
+    to{position: absolute; transition: 0.5s; opacity: 0; left: -100%; }
+  }
+  @keyframes IN2 {
+    from {position: absolute; transition: 0.5s; opacity: 0; left: 100%; }
+    to{position: absolute; transition: 0.5s; opacity: 1; left: 0px; }
+  }
+</style>
+
+<script>
+  function back(PG, To) {
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(PG).style.animation = 'none';
+    document.getElementById(PG).style.animation = "OUT 0.8s"
+    setTimeout(() => {
+      document.getElementById(To).style.animation = 'none'
+      document.getElementById(To).style.display = "block"
+
+      document.getElementById(To).style.animation = 'IN 0.8s'
+
+    }, 300);
+
+    setTimeout(() => {
+      document.getElementById(PG).style.display = "none"
+      document.body.style.overflow = 'auto';
+
+    }, 800);
+
+  }
+  function to(PG, To) {
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById(PG).style.animation = 'none';
+    document.getElementById(PG).style.animation = "OUT2 0.8s"
+    setTimeout(() => {
+      document.getElementById(To).style.animation = 'none'
+      document.getElementById(To).style.display = "block"
+
+      document.getElementById(To).style.animation = 'IN2 0.8s'
+
+    }, 200);
+
+    setTimeout(() => {
+
+      document.getElementById(PG).style.display = "none"
+
+    },800);
+    setTimeout(() => {
+      document.body.style.overflow = 'auto';
+
+    }, 1000);
+
+  }
+</script>
+
+
+
+
+<!--a href="./index.html">
+<button onclick=""  class="button">Exit</button>
+</a-->
+
+
+<!--PG1-->
+
+
+<div id="PG1" style="display: block; height: 100%; bottom: 0; width: 100%; position: absolute; overflow-y: auto;">
+  <div style="width: 100%; height: 45px; background-color: #333;">
+    <span onclick="" class="material-icons" style="float: left; cursor: not-allowed; color: rgba(255, 255, 255, 0.369); top: 50%; left: 10px; position: relative; transform: translate(-0%, -50%);">
+      arrow_back
+      </span>
+      <span onclick="" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255); top: 50%; left: 15px; position: relative; transform: translate(-0%, -50%);">
+        <a style="text-decoration: none; color: white;" href="./index.html">
+          close
+        </a>
+        </span>
+      <h1 style="text-decoration: none;  color: white; right: 20px; top: 50%; font-size: 20px; position: relative;transform: translate(-0%, -50%); float: right;">Main Menu</h1>
+  
+  </div>
+
+  <style>
+   .menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 25px;
+    padding: 50px;
+    background-color: #1e1e1e;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+    width: 90%;
+    max-width: 400px;
+  }
+
+  .menu-button {
+    border: none;
+    background-color: #2c2c2c;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    height: 65px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    color: white;
+    transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .menu-button:hover {
+    background-color: #3a3a3a;
+    transform: translate(-50%, -3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .menu-icon {
+    font-size: 26px;
+    margin-left: 20px;
+    margin-bottom: 3px;
+    position: relative;
+    color: #ffffff;
+  }
+
+  .menu-label {
+    flex-grow: 1;
+    text-align: left;
+    font-weight: bold;
+  }
+  </style>
+  <br>
+  <button class="menu-button" onclick="to('PG1', 'PG3')">
+    <span class="material-icons menu-icon">settings</span>
+    <span class="menu-label">Basic Settings</span>
+  </button>
+  <br>
+  <button class="menu-button" onclick="to('PG1', 'PG5')">
+    <span class="material-icons menu-icon">settings</span>
+    <span class="menu-label">User Settings</span>
+  </button>
+  <br>
+  <button class="menu-button" onclick="to('PG1', 'PG4')">
+    <span class="material-icons menu-icon">error</span>
+    <span class="menu-label">Panic Button</span>
+  </button>
+  <br>
+  <button class="menu-button" onclick="to('PG1', 'PG2')">
+    <span class="material-icons menu-icon">article</span>
+    <span class="menu-label">About:blank Page Maker</span>
+  </button>
+  </div>
+
+<!--PG1 END-->
+
+
+
+<!--Content PG 2-->
+
+<div id="PG2" style="display: none; height: 100%; bottom: 0; width: 100%; position: absolute; overflow-y: auto;">
+<div style="width: 100%; height: 45px; background-color: #333;">
+
+    <span onclick="back('PG2', 'PG1')" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255.369); top: 50%; left: 10px; position: relative; transform: translate(-0%, -50%);">
+      arrow_back
+      </span>
+      <span onclick="" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255); top: 50%; left: 15px; position: relative; transform: translate(-0%, -50%);">
+        <a style="text-decoration: none; color: white;" href="./index.html">
+          close
+        </a>
+        </span>
+    <h1 style="text-decoration: none;  color: white; right: 20px; top: 50%; font-size: 20px; position: relative;transform: translate(-0%, -50%); float: right;">About:Blank Page Maker</h1>
+
+</div>
+
+<br>
+    <p style="text-decoration: none; color: white; font-size: 20px; text-align: center;">A About:Blank Page Will Show Up As a blank page in your tabs, Enter a url below and create a page. </p>
+    <br> 
+    <input
+        style="
+        border: none;
+        background-color: rgb(27, 27, 27);
+        border-radius: 15px; 
+        height: 35px;
+         width: 40%;
+         position: relative;
+         color:white;
+         left: 50%; 
+         padding: 5px;
+         transform: translate(-50%, -0%);
+        "
+        id="url-target"
+        value=""
+        placeholder="Website URL"
+        autocomplete="on"
+        type="text"
+        autofocus
+      />
+    </p>
+    <br>
+   
+     <div id="create" class="option-container " onclick="clearPANIC()">
+      <p class="option-label" style="text-align: center;">Create Page</p>
+      
+    </div>
+</div>
+
+<script>
+  const urlInput2 = document.getElementById("url-target");
+      const urlObject2 = new URL(window.location.href);
+
+      document.getElementById("create").onclick = function () {
+        let url2 = urlInput2.value;
+
+        if (
+          url2.substring(0, 8) !== "https://" &&
+          url2.substring(0, 7) !== "http://"
+        ) {
+          url2 = "https://" + url2.split("https://").pop();
+        } else if (url.substring(0, 7) === "http://") {
+          url2 = "https://" + url2.split("http://").pop();
+        }
+
+        const newWindow = window.open();
+        newWindow.document.body.style.margin = "0";
+        newWindow.document.body.style.height = "100vh";
+
+        const iframe = newWindow.document.createElement("iframe");
+        iframe.style.border = "none";
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.margin = "0";
+        iframe.referrerpolicy = "no-referrer";
+        iframe.allow = "fullscreen";
+        iframe.src = url;
+
+        newWindow.document.body.appendChild(iframe);
+      };
+</script>
+
+<!--PG 2 END-->
+
+
+<!--Content PG 4-->
+
+<div id="PG3" style="display: none; height: 100%; bottom: 0; width: 100%; position: absolute; overflow-y: auto;">
+  <div style="width: 100%; height: 45px; background-color: #333;">
+  
+      <span onclick="back('PG3', 'PG1')" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255.369); top: 50%; left: 10px; position: relative; transform: translate(-0%, -50%);">
+        arrow_back
+        </span>
+        <span onclick="" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255); top: 50%; left: 15px; position: relative; transform: translate(-0%, -50%);">
+          <a style="text-decoration: none; color: white;" href="./index.html">
+            close
+          </a>
+          </span>
+      <h1 style="text-decoration: none;  color: white; right: 20px; top: 50%; font-size: 20px; position: relative;transform: translate(-0%, -50%); float: right;">Basic Settings</h1>
+  
+  </div>
+  
+
+  <style>
+    .option-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 95%;
+    max-width: 800px;
+    margin: 10px auto;
+    padding: 15px;
+    background-color: #1d1d1da5;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .option-container:hover {
+    transform: scale(1.03);
+    background-color: #272727;
+  }
+
+  .option-label {
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    flex-grow: 1;
+  }
+
+  .toggle {
+    transition: 0.5s;
+    position: relative;
+    width: 50px;
+    height: 25px;
+    background-color: #555;
+    border-radius: 50px;
+    transition: background-color 0.3s;
+  }
+
+  .toggle:before {
+    transition: 0.5s;
+
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 21px;
+    height: 21px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+  }
+
+  .toggle.active {
+    background-color: #4caf50;
+  }
+
+  .toggle.active:before {
+    transition: 0.5s;
+
+    transform: translateX(25px);
+  }
+
+  .presets {
+    border: solid 3px grey;
+    border-color: #111111 !important;
+
+    background-color: none;
+  }
+  .presets:hover {
+    transform: translateY(-5px) scale(1.1);
+  }
+
+  .DisabledOption {
+    filter: brightness(60%);
+    cursor: default;
+  }
+  </style>
+
+    <br>
+    <br>
+
+    <div class="option-container" onclick="toggleOptionSet('PageClose')">
+      <p class="option-label">Prevent Page Close</p>
+      <div id="toggle-PageClose" class="toggle"></div>
+    </div>
+
+
+    <br>
+    <br>
+    <br>
+    <h1 style="text-align: center; color: white;">Tab Cloak Presets</h1>
+
+      <div style="left: 50%; width: fit-content; position: relative; transform: translate(-50%, -0%); cursor: pointer;" id="buttons-container"></div>
+    <br>
+      <button style="color: white; font-size: 19px; cursor: pointer; left: 50%; position: relative; transform: translate(-50%, -0%); height: 35px; width: 40%; background-color: #1d1d1d; border-radius: 15px; border: none;" onclick="resetTab()">Clear</button>
+
+    <!--PageScript1-->
+    <script id="CHECK">
+          function getCookie2(name) {
+        const cookieName = name + "=";
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i];
+            while (cookie.charAt(0) === ' ') {
+                cookie = cookie.substring(1);
+            }
+            if (cookie.indexOf(cookieName) === 0) {
+                return cookie.substring(cookieName.length, cookie.length);
+            }
+        }
+        return '';
+    }
+ 
+    
+    let Setting1e4bu = getCookie2("PagePrevent");
+
+    function checkPageClose(event) {
+      
+        
+            event.returnValue = "Prevent Page Close Is Active, You Can Click Off Of This";
+      
+       
+     
+    }
+    function checkPageClose2() {
+        if(Setting1e4bu==="true") {
+        
+            window.onbeforeunload = function(event) {
+                // return a string to prevent the page from closing
+                event.preventDefault();
+                return "Prevent Page Close Is Active, You Can Click Off Of This";
+            };
+            window.addEventListener("beforeunload", checkPageClose);
+
+        } 
+        if(Setting1e4bu==="false") {
+        
+        }
+    }
+    console.log('CookiePAGE Value: ' + Setting1e4bu + "SzGames-Scripts Loaded")
+    checkPageClose2()
+
+    </script>
+
+
+
+  </div>
+
+  
+
+  <!--PG3 END-->
+  <!--Content PG 5-->
+
+
+  <div id="PG5" style="display: none; height: 100%; bottom: 0; width: 100%; position: absolute; overflow-y: auto;">
+    <div style="width: 100%; height: 45px; background-color: #333;">
+    
+        <span onclick="back('PG5', 'PG1')" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255.369); top: 50%; left: 10px; position: relative; transform: translate(-0%, -50%);">
+          arrow_back
+          </span>
+          <span onclick="" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255); top: 50%; left: 15px; position: relative; transform: translate(-0%, -50%);">
+            <a style="text-decoration: none; color: white;" href="./index.html">
+              close
+            </a>
+            </span>
+        <h1 style="text-decoration: none;  color: white; right: 20px; top: 50%; font-size: 20px; position: relative;transform: translate(-0%, -50%); float: right;">User Settings</h1>
+    
+    </div>
+    
+  
+      <br>
+      <br>
+  
+      <div class="option-container" onclick="toggleOptionSet('RestrictSm')">
+        <p class="option-label">Restrict Smooth Animations</p>
+        <div id="toggle-Restrict" class="toggle"></div>
+      </div>
+
+      <div class="option-container  DisabledOption" onclick="">
+        <p class="option-label">Show Game Details</p>
+        <div id="toggle-ShowDet" class="toggle"></div>
+      </div>
+
+      <div class="option-container " onclick="toggleOptionSet('PerformMode')">
+        <p class="option-label">Performence Mode (May Mess Up UI A Bit)</p>
+        <div id="toggle-Perform" class="toggle"></div>
+      </div>
+
+      <div class="option-container  DisabledOption" onclick="">
+        <p class="option-label">Advanced Player</p>
+        <div id="toggle-Advanced" class="toggle"></div>
+      </div>
+
+      <div class="option-container  DisabledOption" onclick="">
+        <p class="option-label">Blocked Checker</p>
+        <div id="toggle-Blocked" class="toggle"></div>
+      </div>
+
+      <div class="option-container  DisabledOption" onclick="">
+        <p class="option-label">Auto Report (Experimental)</p>
+        <div id="toggle-AutoR" class="toggle"></div>
+      </div>
+      <br>
+      <p style="text-align: center; color: white;">Options Are Disabled At The Moment As They Are Being Added</p>
+  
+      <br>
+      <br>
+      <br>
+
+  </div>
+
+<!--Content PG 5 end-->
+
+
+<script>
+
+  function getCookie(name) {
+      const cookieName = name + "=";
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          let cookie = cookies[i];
+          while (cookie.charAt(0) === ' ') {
+              cookie = cookie.substring(1);
+          }
+          if (cookie.indexOf(cookieName) === 0) {
+              return cookie.substring(cookieName.length, cookie.length);
+          }
+      }
+      return '';
+  }
+
+  // Usage
+
+
+
+  function setCookie(name, value, years) {
+      const expirationDate = new Date();
+      expirationDate.setFullYear(expirationDate.getFullYear() + years);
+      const expires = "expires=" + expirationDate.toUTCString();
+      document.cookie = name + "=" + value + ";" + expires + ";path=/";
+  }
+
+
+
+
+  let PageCloseOP = getCookie("PagePrevent");
+  let RestrictSmOP = getCookie("RestrictSmooth");
+  let PerformMode = getCookie("PerforMode");
+
+
+  function toggleOptionSet(name) {
+
+    if(name==="PageClose") {
+      if(PageCloseOP==='false' || PageCloseOP==="") {
+        setCookie("PagePrevent", 'true', 10); // Set the cookie to expire in 10 years
+
+      }
+      if(PageCloseOP==='true') {
+        setCookie("PagePrevent", 'false', 10); // Set the cookie to expire in 10 years
+      }
+      PageCloseOP = getCookie("PagePrevent")
+    }
+
+    if(name==="RestrictSm") {
+      if(RestrictSmOP==='false' || RestrictSmOP==="") {
+        setCookie("RestrictSmooth", 'true', 10); // Set the cookie to expire in 10 years
+      }
+      if(RestrictSmOP==='true') {
+        setCookie("RestrictSmooth", 'false', 10); // Set the cookie to expire in 10 years
+      }
+      RestrictSmOP = getCookie("RestrictSmooth")
+    }
+
+    if(name==="PerformMode") {
+      if(PerformMode==='false' || PerformMode==="") {
+        setCookie("PerforMode", 'true', 10); // Set the cookie to expire in 10 years
+      }
+      if(PerformMode==='true') {
+        setCookie("PerforMode", 'false', 10); // Set the cookie to expire in 10 years
+      }
+      PerformMode = getCookie("PerforMode")
+    }
+
+
+    CheckSettngs1B()
+
+
+  }      
+  
+  var pagecloseToggle = document.getElementById('toggle-PageClose')
+  var restrictToggle = document.getElementById('toggle-Restrict')
+  var performToggle = document.getElementById('toggle-Perform')
+
+
+  var option2bx = document.getElementById('Op2-Stat') //dont touch might break code
+
+
+
+  function CheckSettngs1B() {
+    PageCloseOP = getCookie("PagePrevent")
+
+    //PageClose
+      if(PageCloseOP==="true") {
+          pagecloseToggle.classList.add('active');
+      } 
+      if(PageCloseOP==="false") {
+          pagecloseToggle.classList.remove('active');
+      }
+
+    //RestrictSm
+      if(RestrictSmOP==="true") {
+          restrictToggle.classList.add('active');
+      } 
+      if(RestrictSmOP==="false") {
+          restrictToggle.classList.remove('active');
+      }
+
+    //PerformMode
+      if(PerformMode==="true") {
+        performToggle.classList.add('active');
+      } 
+      if(PerformMode==="false") {
+        performToggle.classList.remove('active');
+      }
+
+
+  }
+
+  CheckSettngs1B()
+
+
+</script>
+
+
+
+<!--Content PG 4-->
+
+<div id="PG4" style="display: none; height: 100%; bottom: 0; width: 100%; position: absolute; overflow-y: auto;">
+  <div style="width: 100%; height: 45px; background-color: #333;">
+  
+      <span onclick="back('PG4', 'PG1')" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255.369); top: 50%; left: 10px; position: relative; transform: translate(-0%, -50%);">
+        arrow_back
+        </span>
+        <span onclick="" class="material-icons" style="float: left; cursor: pointer; color: rgb(255, 255, 255); top: 50%; left: 15px; position: relative; transform: translate(-0%, -50%);">
+          <a style="text-decoration: none; color: white;" href="./index.html">
+            close
+          </a>
+          </span>
+      <h1 style="text-decoration: none;  color: white; right: 20px; top: 50%; font-size: 20px; position: relative;transform: translate(-0%, -50%); float: right;">Panic Button</h1>
+  
+  </div>
+  
+  <br>
+      <p style="text-decoration: none; color: white; font-size: 20px; text-align: center;">Press the key "\" on your keyboard and it will change the page to the set URL." </p>
+      <br> 
+      <input
+          style="
+          border: none;
+          background-color: rgb(27, 27, 27);
+          border-radius: 15px; 
+          height: 35px;
+           width: 40%;
+           position: relative;
+           color:white;
+           left: 50%; 
+           padding: 5px;
+           transform: translate(-50%, -0%);
+          "
+          id="url-target2"
+          value=""
+          placeholder="Website URL"
+          autocomplete="on"
+          type="text"
+          autofocus
+        />
+      </p>
+      <br>
+      
+       <div id="create2" class="option-container " onclick="panicURL()">
+        <p class="option-label" style="text-align: center;">Save</p>
+        
+      </div>
+       
+      
+       
+       <div id="create3" class="option-container " onclick="clearPANIC()">
+        <p class="option-label" style="text-align: center;">Clear</p>
+        
+      </div>
+  </div>
+  
+  <script>
+    const urlInput = document.getElementById("url-target");
+        const urlObject = new URL(window.location.href);
+  
+        document.getElementById("create").onclick = function () {
+          let url = urlInput.value;
+  
+          if (
+            url.substring(0, 8) !== "https://" &&
+            url.substring(0, 7) !== "http://"
+          ) {
+            url = "https://" + url.split("https://").pop();
+          } else if (url.substring(0, 7) === "http://") {
+            url = "https://" + url.split("http://").pop();
+          }
+  
+          const newWindow = window.open();
+          newWindow.document.body.style.margin = "0";
+          newWindow.document.body.style.height = "100vh";
+  
+          const iframe = newWindow.document.createElement("iframe");
+          iframe.style.border = "none";
+          iframe.style.width = "100%";
+          iframe.style.height = "100%";
+          iframe.style.margin = "0";
+          iframe.referrerpolicy = "no-referrer";
+          iframe.allow = "fullscreen";
+          iframe.src = url;
+  
+          newWindow.document.body.appendChild(iframe);
+        };
+  </script>
+  
+  <!--PG 4 END-->
+
+
+
+  <div style="width: 100%; height: 45px; background-color: #333;">
+    
+    
+</div>
+</body>
+
+<script>
+  if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+</script>
+
+</html>
