@@ -1,7 +1,7 @@
 {
     "name": "MathLearnHub",
     "short_name": "Sz-Games",
-    "start_url": "index.html",
+    "start_url": "theactualindex.html",
     "icons": [
   {
     "src": "icons/manifest-icon-192.maskable.png",
