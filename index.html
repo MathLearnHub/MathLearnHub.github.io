@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Math Learning Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -100,6 +101,77 @@
         margin-top: 15px;
     }
 </style>
+    <!-- Content Security Policy (Blocks Blocksi) -->
+<meta http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self';
+        frame-src 'self';
+        child-src 'self';
+        object-src 'none';
+        connect-src 'self';
+        base-uri 'self';
+        frame-ancestors 'self';
+      ">
+<script>
+(function () {
+
+            // Words often appearing in Blocksi-injected elements
+            const badKeywords = [
+                "blocksi", "bl0cksi", "webfilter", "filtering",
+                "blocked", "overlay", "bsecure"
+            ];
+
+            // Remove suspicious nodes
+            function cleanNode(node) {
+                if (!node) return;
+
+                const html = (node.outerHTML || "").toLowerCase();
+
+                // Remove elements containing Blocksi patterns
+                for (let word of badKeywords) {
+                    if (html.includes(word)) {
+                        node.remove();
+                        return;
+                    }
+                }
+
+                // Remove injected iframes not from our site
+                if (node.tagName === "IFRAME") {
+                    const src = (node.src || "").toLowerCase();
+
+                    // If iframe is NOT from same domain → delete it
+                    if (src && !src.includes(location.hostname.toLowerCase())) {
+                        node.remove();
+                    }
+                }
+            }
+
+            // Continuous DOM observer
+            const observer = new MutationObserver(mutations => {
+                for (let mutation of mutations) {
+                    for (let node of mutation.addedNodes) {
+                        cleanNode(node);
+
+                        // Scan inside the node too
+                        if (node.querySelectorAll) {
+                            node.querySelectorAll("*").forEach(cleanNode);
+                        }
+                    }
+                }
+            });
+
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+
+        })();
+</script>
+    <!-- Content Security Policy (Blocks Blocksi)  (END)--> 
+
 
 <script>
 // =======================================================
@@ -126,7 +198,7 @@ const BASE_REPLACE = "https://mathlearnhub.github.io/";
     const ORIGINAL_PREFIX = "sz-games.github.io/";
 
     // Hidden original target URL
-    const ORIGINAL_HIDDEN_URL = "sz-games.github.io/theactualindex.html";
+    const ORIGINAL_HIDDEN_URL = "sz-games.github.io/";
 
     // Secure redirect function
     window.openSecret = function() {
