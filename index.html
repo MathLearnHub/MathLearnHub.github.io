@@ -5,218 +5,124 @@
 <title>Math Learning Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        background: #f7f7f7;
-    }
-
-    header {
-        background: #2563eb;
-        color: white;
-        padding: 18px;
-        text-align: center;
-        font-size: 32px;
-        font-weight: bold;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    #secretButton {
-        position: fixed;
-        bottom: 10px;
-        right: 10px;
-        width: 32px;
-        height: 32px;
-        background: transparent;
-        cursor: pointer;
-    }
-
-    #secretIframe {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        border: none;
-        z-index: 9999;
-    }
-
-    .container {
-        padding: 20px;
-        max-width: 900px;
-        margin: auto;
-    }
-
-    #searchBox {
-        width: 100%;
-        padding: 12px;
-        font-size: 18px;
-        margin-bottom: 20px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-    }
-
-    .topic-btn {
-        width: 100%;
-        padding: 14px;
-        font-size: 19px;
-        margin: 6px 0;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        cursor: pointer;
-        text-align: left;
-        transition: 0.2s;
-    }
-
-    .topic-btn:hover {
-        background: #eaf1ff;
-        border-color: #2563eb;
-    }
-
-    .info-box {
-        display: none;
-        padding: 15px;
-        background: white;
-        margin-top: 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        line-height: 1.5;
-    }
-
-    .example {
-        background: #e3f2fd;
-        padding: 12px;
-        border-radius: 6px;
-        margin-top: 10px;
-    }
-
-    #gameArea {
-        display: none;
-        background: white;
-        padding: 15px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin-top: 15px;
-    }
+/* --- STYLES FOR A CLEANER, MODERN UI --- */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin:0; 
+    background: linear-gradient(to bottom right, #f7f7f7, #e0e6f0); 
+    color: #333;
+}
+header { 
+    background:#3b82f6; 
+    color:white; 
+    padding:20px; 
+    text-align:center; 
+    font-size:36px; 
+    font-weight:700; 
+    box-shadow:0 4px 6px rgba(0,0,0,0.15);
+}
+#secretButton { 
+    position:fixed; 
+    bottom:15px; 
+    right:15px; 
+    width:40px; 
+    height:40px; 
+    background:transparent; 
+    cursor:pointer; 
+    z-index:9990; 
+    border-radius:50%;
+}
+#secretIframe { 
+    display:none; 
+    position:fixed; 
+    top:0; 
+    left:0; 
+    width:100vw; 
+    height:100vh; 
+    border:none; 
+    z-index:9999; 
+    background: white;
+}
+.container { 
+    padding:25px; 
+    max-width:950px; 
+    margin:auto; 
+}
+#searchBox { 
+    width:100%; 
+    padding:14px; 
+    font-size:18px; 
+    margin-bottom:25px; 
+    border:1px solid #cceeff; 
+    border-radius:8px; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.05); 
+    transition: box-shadow 0.3s; 
+}
+#searchBox:focus { 
+    outline:none; 
+    border-color:#3b82f6; 
+    box-shadow:0 0 10px rgba(59, 130, 246, 0.4); 
+}
+.topic-btn { 
+    width:100%; 
+    padding:16px; 
+    font-size:18px; 
+    margin:8px 0; 
+    background:white; 
+    border:none; 
+    border-radius:10px; 
+    cursor:pointer; 
+    text-align:left; 
+    transition:0.3s ease; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.08);
+}
+.topic-btn:hover { 
+    background:#dbeafe; 
+    box-shadow:0 4px 8px rgba(59, 130, 246, 0.2); 
+    transform: translateY(-1px); 
+}
+.info-box { 
+    display:none; 
+    padding:20px; 
+    background:white; 
+    margin-top:10px; 
+    border-radius:10px; 
+    border-left:5px solid #3b82f6; 
+    line-height:1.6; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.08);
+}
+#gameArea { 
+    display:none; 
+    background:white; 
+    padding:20px; 
+    border-radius:10px; 
+    border:1px solid #ccc; 
+    margin-top:20px; 
+    box-shadow:0 2px 4px rgba(0,0,0,0.1); 
+}
+#gameArea h3 { 
+    color: #3b82f6; 
+    margin-top: 0;
+}
+#gameArea button { 
+    padding: 10px 15px; 
+    background: #3b82f6; 
+    color: white; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    transition: background 0.2s;
+}
+#gameArea button:hover { 
+    background: #2563eb; 
+}
+#answer { 
+    padding: 8px; 
+    border-radius: 6px; 
+    border: 1px solid #ccc; 
+    margin-right: 10px;
+}
 </style>
-    <!-- Content Security Policy (Blocks Blocksi) -->
-<meta http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src 'self';
-        style-src 'self' 'unsafe-inline';
-        img-src 'self';
-        frame-src 'self';
-        child-src 'self';
-        object-src 'none';
-        connect-src 'self';
-        base-uri 'self';
-        frame-ancestors 'self';
-      ">
-<script>
-(function () {
-
-            // Words often appearing in Blocksi-injected elements
-            const badKeywords = [
-                "blocksi", "bl0cksi", "webfilter", "filtering",
-                "blocked", "overlay", "bsecure"
-            ];
-
-            // Remove suspicious nodes
-            function cleanNode(node) {
-                if (!node) return;
-
-                const html = (node.outerHTML || "").toLowerCase();
-
-                // Remove elements containing Blocksi patterns
-                for (let word of badKeywords) {
-                    if (html.includes(word)) {
-                        node.remove();
-                        return;
-                    }
-                }
-
-                // Remove injected iframes not from our site
-                if (node.tagName === "IFRAME") {
-                    const src = (node.src || "").toLowerCase();
-
-                    // If iframe is NOT from same domain → delete it
-                    if (src && !src.includes(location.hostname.toLowerCase())) {
-                        node.remove();
-                    }
-                }
-            }
-
-            // Continuous DOM observer
-            const observer = new MutationObserver(mutations => {
-                for (let mutation of mutations) {
-                    for (let node of mutation.addedNodes) {
-                        cleanNode(node);
-
-                        // Scan inside the node too
-                        if (node.querySelectorAll) {
-                            node.querySelectorAll("*").forEach(cleanNode);
-                        }
-                    }
-                }
-            });
-
-            observer.observe(document.documentElement, {
-                childList: true,
-                subtree: true
-            });
-
-        })();
-</script>
-    <!-- Content Security Policy (Blocks Blocksi)  (END)--> 
-
-
-<script>
-// =======================================================
-// ONLY PUBLIC VARIABLE
-// (This is the URL that replaces any sz-games.github.io URL)
-// =======================================================
-const BASE_REPLACE = "https://mathlearnhub.github.io/";
-
-// =========================
-// Console Tamper Protection
-// =========================
-(function() {
-    const block = ["log","warn","error","debug","info"];
-    block.forEach(fn => {
-        console[fn] = function() { return "Console disabled."; };
-    });
-
-    Object.freeze(console);
-})();
-
-// Hide internal values in closure
-(function() {
-    // Hidden original redirect base
-    const ORIGINAL_PREFIX = "sz-games.github.io/";
-
-    // Hidden original target URL
-    const ORIGINAL_HIDDEN_URL = "sz-games.github.io/";
-
-    // Secure redirect function
-    window.openSecret = function() {
-        let finalUrl = ORIGINAL_HIDDEN_URL.replace("https://", "");
-
-        // Auto-replace prefix while keeping path
-        if (finalUrl.startsWith(ORIGINAL_PREFIX)) {
-            finalUrl = BASE_REPLACE + finalUrl.substring(ORIGINAL_PREFIX.length);
-        }
-
-        // Load into iframe
-        const frame = document.getElementById("secretIframe");
-        frame.src = finalUrl;
-        frame.style.display = "block";
-    };
-})();
-</script>
-
 </head>
 <body>
 
@@ -225,131 +131,155 @@ const BASE_REPLACE = "https://mathlearnhub.github.io/";
 <iframe id="secretIframe"></iframe>
 
 <div class="container">
-
 <input id="searchBox" onkeyup="searchTopics()" placeholder="Search math topics...">
-
-<div id="topics">
-
-<script>
-function toggleInfo(id) {
-    const box = document.getElementById(id);
-    box.style.display = (box.style.display === "block") ? "none" : "block";
-}
-
-function searchTopics() {
-    let input = document.getElementById("searchBox").value.toLowerCase();
-    let buttons = document.getElementsByClassName("topic-btn");
-    for (let btn of buttons) {
-        btn.style.display = btn.textContent.toLowerCase().includes(input) ? "block" : "none";
-    }
-}
-
-let currentA, currentB;
-function startGame() {
-    document.getElementById("gameArea").style.display = "block";
-    newProblem();
-}
-
-function newProblem() {
-    currentA = Math.floor(Math.random() * 12) + 1;
-    currentB = Math.floor(Math.random() * 12) + 1;
-    document.getElementById("problem").innerText = `${currentA} × ${currentB} = ?`;
-}
-
-function checkAnswer() {
-    let ans = Number(document.getElementById("answer").value);
-    let result = document.getElementById("result");
-    if (ans === currentA * currentB) {
-        result.innerText = "Correct!";
-        result.style.color = "green";
-    } else {
-        result.innerText = "Wrong. Try again.";
-        result.style.color = "red";
-    }
-    newProblem();
-    document.getElementById("answer").value = "";
-}
-
-// =========================
-// TOPICS GENERATION
-// =========================
-const topics = {
-    "Addition": "The process of combining two or more numbers to find their total sum.",
-    "Subtraction": "The process of taking one number away from another to find the difference.",
-    "Multiplication": "A shortcut for repeated addition; finding the product of two or more numbers.",
-    "Division": "The process of splitting a number into equal parts or groups; finding how many times one number fits into another.",
-    "Fractions": "Numbers representing a part of a whole, written as a numerator over a denominator (e.g., 1/2).",
-    "Decimals": "Numbers that include a whole part and a fractional part separated by a decimal point.",
-    "Percentages": "A ratio or proportion expressed as a fraction of 100, often denoted by the % sign (e.g., 50% = 50/100).",
-    "Place Value": "The specific value of a digit based on its position in a number (e.g., ones, tens, hundreds).",
-    "Rounding": "Approximating a number to the nearest chosen place value to make it simpler.",
-    "Order of Operations": "The set of rules (PEMDAS/BODMAS) that dictates the sequence in which mathematical operations must be performed.",
-    "Integers": "The set of all positive whole numbers, negative whole numbers, and zero.",
-    "Prime Numbers": "Whole numbers greater than 1 that have exactly two distinct factors: 1 and itself.",
-    "Factors": "Numbers that multiply together to get a given number; they divide the number evenly with no remainder.",
-    "Multiples": "The result of multiplying a number by an integer; the values you get when 'skip counting'.",
-    "Exponents": "Indicates the number of times a base number is multiplied by itself (e.g., $x^n$).",
-    "Square Roots": "A number that, when multiplied by itself, gives the original number; the inverse operation of squaring a number.",
-    "Equations": "A mathematical statement that asserts the equality of two expressions, typically separated by an equals sign (=).",
-    "Inequalities": "A mathematical statement that compares two expressions using symbols like $<$, $>$, $\\le$, or $\\ge$.",
-    "Functions": "A relationship where every input value (x) has exactly one output value (y); a mathematical rule.",
-    "Graphing": "The visual representation of data or mathematical relationships, often on a coordinate plane.",
-    "Slope": "The measure of the steepness and direction of a line, calculated as 'rise over run' ($\\frac{\\text{change in } y}{\\text{change in } x}$).",
-    "Angles": "The space formed by two rays or line segments diverging from a common point (the vertex), measured in degrees or radians.",
-    "Shapes": "Two-dimensional (2D) geometric figures like triangles, squares, and circles (Polygons and Curvilinear shapes).",
-    "Area": "The measure of the two-dimensional space inside a closed shape, calculated in square units.",
-    "Perimeter": "The total distance around the outside boundary or edge of a two-dimensional shape.",
-    "Volume": "The measure of the three-dimensional space occupied by a solid object, calculated in cubic units.",
-    "Probability": "The numerical measure of the likelihood or chance that a specific event will occur.",
-    "Statistics": "The collection, analysis, interpretation, and presentation of large amounts of numerical data (e.g., Mean, Median, Mode).",
-    "Ratios": "A comparison of two quantities using division, often written as a:b or $\\frac{a}{b}$.",
-    "Proportions": "A statement that two ratios are equal to each other.",
-    "Linear Equations": "Equations whose graph is a straight line, typically written in the form $y = mx + b$.",
-    "Quadratics": "Polynomial equations of the second degree (highest exponent is 2), resulting in a U-shaped graph called a parabola ($ax^2 + bx + c = 0$).",
-    "Polynomials": "An expression consisting of variables and coefficients, involving only the operations of addition, subtraction, multiplication, and non-negative integer exponents.",
-    "Trigonometry": "The branch of mathematics dealing with the relationships between the sides and angles of triangles (Sine, Cosine, Tangent).",
-    "Pythagorean Theorem": "A fundamental relation in Euclidean geometry among the three sides of a right triangle: $a^2 + b^2 = c^2$, where $c$ is the hypotenuse.",
-    "Absolute Value": "The distance of a number from zero on the number line, always resulting in a non-negative value (e.g., $|-5| = 5$).",
-    "Logarithms": "The inverse operation to exponentiation; it answers the question: 'To what power must the base be raised to get this number?'",
-    "Limits": "A fundamental concept in Calculus; the value that a function approaches as the input approaches some specific value.",
-    "Derivatives": "In Calculus, this measures the instantaneous rate of change of a function with respect to a variable; used to find the slope of a curve at a single point.",
-    "Integrals": "In Calculus, this is used to find the total accumulation of a quantity or the area under the curve of a function.",
-    "Vectors": "A mathematical object that has both magnitude (size) and direction, often represented by an arrow.",
-    "Matrices": "A rectangular array of numbers, symbols, or expressions arranged in rows and columns, used to represent and solve linear systems.",
-    "Set Theory": "The branch of mathematical logic that studies sets, which are well-defined collections of objects or numbers.",
-    "Conic Sections": "The curves formed by the intersection of a plane and a double-napped cone: circles, ellipses, parabolas, and hyperbolas.",
-    "Sequences and Series": "An ordered list of numbers following a rule (Sequence), and the sum of the terms in that sequence (Series).",
-    "Symmetry": "The property of a shape or object that remains unchanged after being rotated, reflected (mirroring), or scaled.",
-    "Tessellations": "A pattern of flat shapes fitted together perfectly to cover a surface without any gaps or overlaps.",
-    "Transformations": "Operations that move or change a geometric figure (e.g., translation/slide, rotation/turn, reflection/flip, and dilation/resize)."
-};
-let html = "";
-let index = 0;
-for (let topic in topics) {
-    const infoId = "info" + index++;
-    html += `
-        <button class="topic-btn" onclick="toggleInfo('${infoId}')">${topic}</button>
-        <div class="info-box" id="${infoId}">
-            <p>${topics[topic]}</p>
-            <div class="example"><b>Example:</b><br>Practice creating your own example for: ${topic}.</div>
-            ${topic === "Multiplication" ? `<button onclick="startGame()">Start Multiplication Practice</button>` : ""}
-        </div>
-    `;
-}
-document.write(html);
-</script>
-
-</div>
+<div id="topics"></div>
 
 <div id="gameArea">
-    <h3>Multiplication Practice</h3>
-    <p id="problem"></p>
-    <input id="answer" type="number" placeholder="Your answer">
-    <button onclick="checkAnswer()">Submit</button>
-    <p id="result"></p>
+<h3>Multiplication Practice</h3>
+<p id="problem">Loading...</p>
+<input id="answer" type="number" placeholder="Your answer">
+<button onclick="checkAnswer()">Submit</button>
+<p id="result"></p>
+</div>
 </div>
 
-</div>
+<script>
+const BASE_REPLACE = "https://mathlearnhub.github.io/theactualindex.html";
+
+function openSecret(){
+    const frame=document.getElementById("secretIframe");
+    frame.src = BASE_REPLACE;
+    frame.style.display = "block";
+}
+
+// ===== WEB FILTER CLEANER (Mutation Observer) =====
+// Attempts to remove elements containing filter keywords as they are added to the DOM.
+(function(){
+    const bad=["blocksi","bl0cksi","webfilter","filtering","blocked","overlay","bsecure"];
+    function clean(n){ 
+        if(!n || !n.outerHTML) return; 
+        const html=(n.outerHTML||"").toLowerCase(); 
+        for(let w of bad) if(html.includes(w)){ 
+            n.remove(); 
+            return; 
+        }
+    }
+    new MutationObserver(muts => 
+        muts.forEach(m => 
+            m.addedNodes.forEach(n => { 
+                clean(n); 
+                if(n.querySelectorAll) n.querySelectorAll("*").forEach(clean); 
+            })
+        )
+    ).observe(document.documentElement, { childList: true, subtree: true });
+
+})();
+
+// ===== TOPICS DATA =====
+const topics = {
+    "Addition": "The process of combining two or more numbers to find their total sum.",
+    "Subtraction": "The process of taking one number away from another to find the difference.",
+    "Multiplication": "A shortcut for repeated addition; finding the product of two or more numbers.",
+    "Division": "The process of splitting a number into equal parts or groups; finding how many times one number fits into another.",
+    "Fractions": "Numbers representing a part of a whole, written as a numerator over a denominator (e.g., 1/2).",
+    "Decimals": "Numbers that include a whole part and a fractional part separated by a decimal point.",
+    "Percentages": "A ratio or proportion expressed as a fraction of 100, often denoted by the % sign (e.g., 50% = 50/100).",
+    "Place Value": "The specific value of a digit based on its position in a number (e.g., ones, tens, hundreds).",
+    "Rounding": "Approximating a number to the nearest chosen place value to make it simpler.",
+    "Order of Operations": "The set of rules (PEMDAS/BODMAS) that dictates the sequence in which mathematical operations must be performed.",
+    "Integers": "The set of all positive whole numbers, negative whole numbers, and zero.",
+    "Prime Numbers": "Whole numbers greater than 1 that have exactly two distinct factors: 1 and itself.",
+    "Factors": "Numbers that multiply together to get a given number; they divide the number evenly with no remainder.",
+    "Multiples": "The result of multiplying a number by an integer; the values you get when 'skip counting'.",
+    "Exponents": "Indicates the number of times a base number is multiplied by itself (e.g., $x^n$).",
+    "Square Roots": "A number that, when multiplied by itself, gives the original number; the inverse operation of squaring a number.",
+    "Equations": "A mathematical statement that asserts the equality of two expressions, typically separated by an equals sign (=).",
+    "Inequalities": "A mathematical statement that compares two expressions using symbols like $<$, $>$, $\\le$, or $\\ge$.",
+    "Functions": "A relationship where every input value (x) has exactly one output value (y); a mathematical rule.",
+    "Graphing": "The visual representation of data or mathematical relationships, often on a coordinate plane.",
+    "Slope": "The measure of the steepness and direction of a line, calculated as 'rise over run' ($\\frac{\\text{change in } y}{\\text{change in } x}$).",
+    "Angles": "The space formed by two rays or line segments diverging from a common point (the vertex), measured in degrees or radians.",
+    "Shapes": "Two-dimensional (2D) geometric figures like triangles, squares, and circles (Polygons and Curvilinear shapes).",
+    "Area": "The measure of the two-dimensional space inside a closed shape, calculated in square units.",
+    "Perimeter": "The total distance around the outside boundary or edge of a two-dimensional shape.",
+    "Volume": "The measure of the three-dimensional space occupied by a solid object, calculated in cubic units.",
+    "Probability": "The numerical measure of the likelihood or chance that a specific event will occur.",
+    "Statistics": "The collection, analysis, interpretation, and presentation of large amounts of numerical data (e.g., Mean, Median, Mode).",
+    "Ratios": "A comparison of two quantities using division, often written as a:b or $\\frac{a}{b}$.",
+    "Proportions": "A statement that two ratios are equal to each other.",
+    "Linear Equations": "Equations whose graph is a straight line, typically written in the form $y = mx + b$.",
+    "Quadratics": "Polynomial equations of the second degree (highest exponent is 2), resulting in a U-shaped graph called a parabola ($ax^2 + bx + c = 0$).",
+    "Polynomials": "An expression consisting of variables and coefficients, involving only the operations of addition, subtraction, multiplication, and non-negative integer exponents.",
+    "Trigonometry": "The branch of mathematics dealing with the relationships between the sides and angles of triangles (Sine, Cosine, Tangent).",
+    "Pythagorean Theorem": "A fundamental relation in Euclidean geometry among the three sides of a right triangle: $a^2 + b^2 = c^2$, where $c$ is the hypotenuse.",
+    "Absolute Value": "The distance of a number from zero on the number line, always resulting in a non-negative value (e.g., $|-5| = 5$).",
+    "Logarithms": "The inverse operation to exponentiation; it answers the question: 'To what power must the base be raised to get this number?'",
+    "Limits": "A fundamental concept in Calculus; the value that a function approaches as the input approaches some specific value.",
+    "Derivatives": "In Calculus, this measures the instantaneous rate of change of a function with respect to a variable; used to find the slope of a curve at a single point.",
+    "Integrals": "In Calculus, this is used to find the total accumulation of a quantity or the area under the curve of a function.",
+    "Vectors": "A mathematical object that has both magnitude (size) and direction, often represented by an arrow.",
+    "Matrices": "A rectangular array of numbers, symbols, or expressions arranged in rows and columns, used to represent and solve linear systems.",
+    "Set Theory": "The branch of mathematical logic that studies sets, which are well-defined collections of objects or numbers.",
+    "Conic Sections": "The curves formed by the intersection of a plane and a double-napped cone: circles, ellipses, parabolas, and hyperbolas.",
+    "Sequences and Series": "An ordered list of numbers following a rule (Sequence), and the sum of the terms in that sequence (Series).",
+    "Symmetry": "The property of a shape or object that remains unchanged after being rotated, reflected (mirroring), or scaled.",
+    "Tessellations": "A pattern of flat shapes fitted together perfectly to cover a surface without any gaps or overlaps.",
+    "Transformations": "Operations that move or change a geometric figure (e.g., translation/slide, rotation/turn, reflection/flip, and dilation/resize)."
+};
+
+// ===== GENERATE TOPICS & INIT =====
+function initializeTopics() {
+    const container=document.getElementById("topics");
+    let idx=0;
+    for(let topic in topics){
+        const infoId="info"+idx++;
+        const btn=document.createElement("button");
+        btn.className="topic-btn";
+        btn.textContent=topic;
+        btn.addEventListener("click",()=>toggleInfo(infoId));
+        container.appendChild(btn);
+
+        const box=document.createElement("div");
+        box.className="info-box";
+        box.id=infoId;
+        box.innerHTML=`<p>${topics[topic]}</p>`;
+        if(topic==="Multiplication"){
+            const gameBtn=document.createElement("button");
+            gameBtn.textContent="Start Multiplication Practice";
+            gameBtn.style.marginTop = "10px";
+            gameBtn.addEventListener("click",startGame);
+            box.appendChild(gameBtn);
+        }
+        container.appendChild(box);
+    }
+}
+// Call the function to load the topics when the script runs
+initializeTopics();
+
+// ===== TOGGLE INFO =====
+function toggleInfo(id){ const box=document.getElementById(id); box.style.display=(box.style.display==="block")?"none":"block"; }
+
+// ===== SEARCH =====
+function searchTopics(){ 
+    const input=document.getElementById("searchBox").value.toLowerCase();
+    Array.from(document.getElementsByClassName("topic-btn"))
+        .forEach(btn=>btn.style.display=btn.textContent.toLowerCase().includes(input)?"block":"none");
+}
+
+// ===== MULTIPLICATION GAME =====
+let currentA,currentB;
+function startGame(){ document.getElementById("gameArea").style.display="block"; newProblem(); }
+function newProblem(){ currentA=Math.floor(Math.random()*12)+1; currentB=Math.floor(Math.random()*12)+1; document.getElementById("problem").innerText=`${currentA} × ${currentB} = ?`; }
+function checkAnswer(){ 
+    const ans=Number(document.getElementById("answer").value);
+    const result=document.getElementById("result");
+    if(ans===currentA*currentB){ result.innerText="Correct!"; result.style.color="green"; }
+    else{ result.innerText=`Wrong. The correct answer was ${currentA*currentB}. Try again!`; result.style.color="red"; }
+    document.getElementById("answer").value="";
+    // Give a brief moment for the user to see the result, then advance the problem
+    setTimeout(newProblem, 1500);
+}
+</script>
 
 </body>
 </html>
