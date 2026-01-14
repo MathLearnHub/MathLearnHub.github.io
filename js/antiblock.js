@@ -84,6 +84,87 @@
             img.src = proxyUrl;
         }
     }, true); // Capture phase to catch error events on elements
-
-    console.log("[AntiBlock] Active.");
+    
 })();
+
+// ===================================================
+// HARD NAVIGATION LOCK — PRODUCTION SAFE
+// ===================================================
+
+(function(){
+
+  const allowedHosts = [
+    location.hostname,
+    "lolfactor39.github.io",
+    "track-study-9f2eb.firebaseapp.com",
+    "track-study-9f2eb.web.app",
+    "track-study-9f2eb-default-rtdb.firebaseio.com"
+  ];
+
+  const legitPush = history.pushState;
+  const legitReplace = history.replaceState;
+
+  function hostAllowed(host){
+    return allowedHosts.some(h => host === h || host.endsWith("." + h));
+  }
+
+  function isSafe(url){
+    try {
+      const u = new URL(url, location.href);
+
+      // Host must be allowed
+      if (!hostAllowed(u.hostname)) return false;
+
+      // Lock GitHub Pages to /chat/*
+      if (u.hostname === "lolfactor39.github.io" && !u.pathname.startsWith("/chat/"))
+        return false;
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function block(url){
+    console.error("🚨 BLOCKED redirect hijack:", url);
+    return false;
+  }
+
+  ["assign","replace"].forEach(fn=>{
+    const real = location[fn];
+    location[fn] = url => isSafe(url) ? real.call(location,url) : block(url);
+  });
+
+  Object.defineProperty(location,"href",{ set:url=>!isSafe(url)&&block(url) });
+
+  history.pushState = function(state,title,url){
+    if(url && !isSafe(url)) return block(url);
+    return legitPush.apply(history, arguments);
+  };
+
+  history.replaceState = function(state,title,url){
+    if(url && !isSafe(url)) return block(url);
+    return legitReplace.apply(history, arguments);
+  };
+
+  window.open = url => url && !isSafe(url) ? block(url) : null;
+
+  const obs = new MutationObserver(m=>{
+    m.forEach(x=>{
+      x.addedNodes.forEach(n=>{
+        if(n.tagName==="SCRIPT" && n.src && !isSafe(n.src)){
+          console.warn("Removed injected script:", n.src);
+          n.remove();
+        }
+      });
+    });
+  });
+
+  obs.observe(document,{childList:true,subtree:true});
+
+  console.log("[Redirect Shield] Active");
+  console.log("[AntiBlock] Active.");
+  console.log("All Anti blocksi Measures are running.");
+
+})();
+

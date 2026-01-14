@@ -81,7 +81,7 @@ async function googleLogin() {
   const email = user.email;
   const name = user.displayName;
   const photo = user.photoURL;
-  const ADMIN_EMAILS = ["advikmurthy12@gmail.com"];
+  const ADMIN_EMAILS = ["advikmurthy12@gmail.com" , "632547@stu.sandi.net"];
 
   const userRef = db.ref("users/" + uid);
   const snap = await userRef.get();
