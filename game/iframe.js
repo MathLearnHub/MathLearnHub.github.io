@@ -34,6 +34,7 @@ var flash = ['escape-the-closet',
     'escape-the-phonebooth',
     'rogue-soul',
     'achievement-unlocked-3',
+    'minesweeper',
     'escape-the-shack',
     'stealing-the-diamond',
     'achievement-unlocked',
@@ -311,3 +312,4 @@ const gameTitleEl = document.getElementById('gameTitle');
 if (gameTitleEl) gameTitleEl.textContent = humanize(fragmentIdentifier)
 // Hide loading once iframe is ready
 iframe.addEventListener('load', ()=>{ document.getElementById('loading')?.remove() })
+
