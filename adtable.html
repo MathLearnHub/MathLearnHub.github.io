@@ -192,6 +192,7 @@
           <th>Role</th>
           <th>Name</th>
           <th>Time Spent</th>
+          <th> Created  </th>
           <th>Online</th>
           <th>Leaderboard Ban</th>
           <th>Controls</th>
@@ -260,6 +261,7 @@
         <td>${u.role || "user"}${isOwner ? " (Owner)" : ""}</td>
         <td>${u.name || "N/A"}</td>
         <td>${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}</td>
+        <td>${new Date(u.created || 0).toLocaleDateString()}</td>
         <td>${u.online ? "Yes" : "No"}</td>
         <td>
           <button class="${u.banned ? 'danger' : 'normal'}" data-action="leaderboard" data-uid="${uid}" ${isOwner ? "disabled" : ""}>

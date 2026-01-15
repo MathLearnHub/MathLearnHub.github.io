@@ -1,65 +1,257 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <title>UV Active Loader</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    html,
-    body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-    }
-
-    #view {
-      border: 0;
-      width: 100vw;
-      height: 100vh;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Drive - Google Drive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes scan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scanner-line {
+            height: 4px;
+            background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
+            box-shadow: 0 0 20px #3b82f6;
+            animation: scan 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        #terminal::-webkit-scrollbar { width: 4px; }
+        #terminal::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 10px; }
+        .glitch-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.9); }
+        .progress-bar-fill { transition: width 0.2s ease-out; }
+        #panic-screen { display: none; }
+    </style>
 </head>
+<body class="bg-[#020617] text-blue-400 font-mono overflow-hidden h-screen flex flex-col">
 
-<body>
+    <!-- Panic Overlay (Triggered by Esc) -->
+    <div id="panic-screen" class="fixed inset-0 z-[100] bg-white">
+        <iframe src="https://docs.google.com/document/u/0/" class="w-full h-full border-none"></iframe>
+    </div>
 
-  <iframe id="view"></iframe>
-  <script src="/js/antiblock.js"></script>
-  <script src="/active/uv/uv.bundle.js"></script>
-  <script src="/active/uv/uv.config.js"></script>
+    <!-- Stealth Boot Screen -->
+    <div id="boot-screen" class="fixed inset-0 z-50 bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
+        <div class="relative w-64 h-64 border-2 border-blue-900/30 mb-8 overflow-hidden rounded-3xl shadow-[0_0_60px_rgba(59,130,246,0.15)]">
+            <div class="scanner-line absolute w-full top-0 z-10"></div>
+            <div class="absolute inset-0 bg-[radial-gradient(circle,#1e293b_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
+            
+            <div id="progress-circle" class="absolute inset-0 flex flex-col items-center justify-center z-20">
+                <span class="text-4xl font-black glitch-text tracking-tighter text-white">0%</span>
+                <div class="w-40 h-1.5 bg-blue-950/50 mt-4 rounded-full overflow-hidden">
+                    <div id="bar-inner" class="progress-bar-fill h-full bg-blue-500 w-0 shadow-[0_0_15px_#3b82f6]"></div>
+                </div>
+                <span id="speed-indicator" class="text-[8px] text-blue-300 mt-4 uppercase tracking-[0.4em] font-bold">Turbo-Stream Active</span>
+            </div>
+        </div>
+        
+        <div id="branding-area" class="space-y-1">
+            <h1 class="text-xl tracking-[0.2em] uppercase font-black text-white">Encrypted <span class="text-blue-500">Node</span></h1>
+            <p id="status-text" class="text-blue-700 animate-pulse text-[10px] font-bold tracking-widest uppercase">Initializing High-Speed Ingress...</p>
+        </div>
+        
+        <div id="terminal" class="mt-8 w-full max-w-2xl h-36 overflow-y-auto text-[9px] text-left bg-black/60 backdrop-blur-xl p-4 border border-blue-900/20 rounded-2xl">
+            <div class="text-blue-400 font-bold mb-1">>> SEC-OPS v3.8: Protocol Resilient Mesh</div>
+            <div class="text-blue-600/60">-- Fragmentation logic adjusted for Bloxd-tier targets.</div>
+        </div>
+    </div>
 
-  <script type="module">
-    import { getUV } from "/active/scripts/prxy.mjs";
+    <!-- Container for the Mirrored App -->
+    <div id="mirror-container" class="hidden fixed inset-0 bg-black">
+        <!-- Removed allow-same-origin to prevent sandbox escape warnings while maintaining script functionality -->
+        <iframe id="mirror-frame" class="w-full h-full border-none" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads"></iframe>
+    </div>
 
-    let u = new URLSearchParams(location.search).get("url");
+    <script>
+        const UI = {
+            boot: document.getElementById('boot-screen'),
+            status: document.getElementById('status-text'),
+            progress: document.querySelector('#progress-circle span'),
+            bar: document.getElementById('bar-inner'),
+            speed: document.getElementById('speed-indicator'),
+            terminal: document.getElementById('terminal'),
+            container: document.getElementById('mirror-container'),
+            frame: document.getElementById('mirror-frame'),
+            branding: document.getElementById('branding-area'),
+            panic: document.getElementById('panic-screen')
+        };
 
-    if (u) {
-      if (!u.startsWith("http")) u = "https://" + u;
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                UI.panic.style.display = 'block';
+                document.title = "Google Docs";
+            }
+        });
 
-      const iframe = document.getElementById("view");
+        const log = (msg, type = 'INFO') => {
+            const div = document.createElement('div');
+            const colors = { ERROR: 'text-red-400', WARN: 'text-yellow-400', SUCCESS: 'text-cyan-400' };
+            div.className = `py-0.5 ${colors[type] || 'text-blue-700/80'}`;
+            div.innerHTML = `<span class="opacity-40">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+            UI.terminal.appendChild(div);
+            UI.terminal.scrollTop = UI.terminal.scrollHeight;
+        };
 
-      // Always use UV proxy, even on localhost, to ensure correct behavior (cookies, headers, etc.)
-      try {
-        const viewUrl = await getUV(u);
-        iframe.src = viewUrl;
-        console.log("[Loader] Proxied URL:", viewUrl);
-      } catch (err) {
-        console.error("[Loader] Failed to get UV URL:", err);
-        // Optional: Show a user-friendly error on the iframe or overlay
-        document.body.innerHTML = `<div style="color:white;text-align:center;margin-top:20%">
-        <h1>Proxy Error</h1>
-        <p>Failed to load the proxy service.</p>
-        <p>Error: ${err.message}</p>
-        <button onclick="location.reload()">Retry</button>
-      </div>`;
-      }
-    }
-  </script>
+        class MirrorEngine {
+            constructor(targetUrl) {
+                this.targetUrl = new URL(targetUrl);
+                this.assetMap = new Map();
+                this.totalAssets = 0;
+                this.processedAssets = 0;
+                this.concurrencyLimit = 64;
+                // Updated proxy list for better success rate with gaming sites
+                this.proxies = [
+                    "https://api.allorigins.win/raw?url=",
+                    "https://corsproxy.io/?",
+                    "https://worker-proxy.cors-anywhere.workers.dev/"
+                ];
+            }
 
+            async fetchWithFallback(url, attempt = 0) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 4000);
+                    const response = await fetch(url, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (e) {
+                    if (attempt < this.proxies.length) {
+                        log(`Rerouting via Node ${attempt + 1}...`, 'WARN');
+                        const proxyUrl = this.proxies[attempt] + encodeURIComponent(url);
+                        return this.fetchWithFallback(proxyUrl, attempt + 1);
+                    }
+                    throw e;
+                }
+            }
+
+            async start() {
+                try {
+                    log(`Secure Link Established: ${btoa(this.targetUrl.hostname).substring(0,8)}`, 'SUCCESS');
+                    window.history.replaceState({}, '', window.location.pathname + '#/drive/v2/files/shared-with-me');
+                    
+                    let response;
+                    try {
+                        response = await this.fetchWithFallback(this.targetUrl.href);
+                    } catch (e) {
+                        log("CORS/Mesh Failure. Attempting Direct-Inject fallback.", "WARN");
+                        this.directInject();
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        log(`Tunnel error ${response.status}. Switching to Direct-Inject.`, 'WARN');
+                        this.directInject();
+                        return;
+                    }
+                    
+                    let html = await response.text();
+                    
+                    // Improved regex to catch more dynamic game assets
+                    const assetRegex = /(?:src|href|url|poster|data-src|data-main|data-config|import)\s*[:=]\s*['"]?([^'"\s>]+)['"]?/gi;
+                    const assetsToFetch = new Set();
+                    let match;
+                    while ((match = assetRegex.exec(html)) !== null) {
+                        const rawPath = match[1];
+                        if (rawPath.startsWith('data:') || rawPath.startsWith('blob:') || rawPath.startsWith('#') || rawPath.includes('nonce-')) continue;
+                        try {
+                            const absoluteUrl = new URL(rawPath, this.targetUrl.href).href;
+                            assetsToFetch.add(absoluteUrl);
+                        } catch (e) {}
+                    }
+
+                    const assetList = Array.from(assetsToFetch);
+                    this.totalAssets = assetList.length;
+                    
+                    if (this.totalAssets > 0) {
+                        log(`Streaming ${this.totalAssets} data fragments...`);
+                        const chunks = [];
+                        for (let i = 0; i < assetList.length; i += this.concurrencyLimit) {
+                            chunks.push(assetList.slice(i, i + this.concurrencyLimit));
+                        }
+                        for (const chunk of chunks) {
+                            await Promise.all(chunk.map(url => this.mirrorAsset(url)));
+                        }
+                    }
+
+                    this.injectAndRun(html);
+
+                } catch (err) {
+                    log(err.message, 'ERROR');
+                    UI.status.textContent = "TUNNEL COLLAPSED";
+                }
+            }
+
+            async mirrorAsset(url) {
+                try {
+                    const response = await this.fetchWithFallback(url);
+                    const blob = await response.blob();
+                    this.assetMap.set(url, URL.createObjectURL(blob));
+                } catch (e) {} finally {
+                    this.processedAssets++;
+                    const percent = Math.floor((this.processedAssets / this.totalAssets) * 100);
+                    UI.progress.textContent = `${percent}%`;
+                    UI.bar.style.width = `${percent}%`;
+                }
+            }
+
+            directInject() {
+                UI.boot.style.display = 'none';
+                UI.container.classList.remove('hidden');
+                UI.frame.src = this.targetUrl.href;
+                log("Direct-Inject active. Some features may be restricted.", "WARN");
+            }
+
+            injectAndRun(html) {
+                // Bulk replace assets to improve speed
+                this.assetMap.forEach((localUrl, originalUrl) => {
+                    html = html.split(originalUrl).join(localUrl);
+                });
+
+                // Simplified shim to avoid CSP 'unsafe-inline' and 'nonce' issues
+                const runtimeScript = `
+                    <script>
+                        (function() {
+                            const assetMap = ${JSON.stringify(Object.fromEntries(this.assetMap))};
+                            try {
+                                Object.defineProperty(document, 'referrer', { get: () => "https://google.com/" });
+                            } catch(e) {}
+                            
+                            const originalFetch = window.fetch;
+                            window.fetch = async (...args) => {
+                                const url = typeof args[0] === 'string' ? args[0] : (args[0].url || args[0]);
+                                try {
+                                    const absUrl = new URL(url, document.baseURI).href;
+                                    if (assetMap[absUrl]) return originalFetch(assetMap[absUrl]);
+                                } catch(e){}
+                                return originalFetch(...args);
+                            };
+                            
+                            window.parent = window;
+                            window.top = window;
+                        })();
+                    <\/script>
+                `;
+
+                const blob = new Blob([runtimeScript + html], { type: 'text/html' });
+                const mainUrl = URL.createObjectURL(blob);
+                
+                setTimeout(() => {
+                    UI.boot.style.display = 'none';
+                    UI.container.classList.remove('hidden');
+                    UI.frame.src = mainUrl;
+                }, 150);
+            }
+        }
+
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const url = urlParams.get('url');
+            if (url) {
+                new MirrorEngine(url).start();
+            } else {
+                UI.status.innerHTML = "AWAITING SECURE TARGET";
+            }
+        };
+    </script>
 </body>
-
 </html>
