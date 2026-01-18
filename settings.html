@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Settings Panel — PowerSchool Style</title>
+
+<style>
+  :root{
+    --nav-h: 70px;
+    --gap: 16px;
+    --card-bg: #12121a;
+    --page-bg: #0e1117;
+    --accent: #4f7cff;
+    --muted: #aaa;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;}
+
+  body{
+    background: var(--page-bg) url('images/background.png') center/cover no-repeat fixed;
+    color: #e6edf3;
+    min-height:100vh;
+    height:100vh;
+    overflow:hidden; 
+    padding-top: var(--nav-h);
+  }
+
+  nav{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:var(--nav-h);
+    background:#161b22;
+    border-bottom:1px solid #30363d;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 10px 20px;
+    z-index:200;
+  }
+
+  nav .left{display:flex; gap:12px; align-items:center;}
+  nav .right{display:flex; gap:12px; align-items:center;}
+  nav img{height:34px; cursor:pointer;}
+  nav span{font-size:1rem; color:#e6edf3; cursor:pointer;}
+
+  .grid-wrap{
+    height: calc(100vh - var(--nav-h));
+    padding: calc(var(--gap) + 10px);
+    display:grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr 1fr;
+    align-items:start;
+    overflow:hidden;
+  }
+
+  .card{
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-height:0;
+    overflow:auto;
+  }
+
+  .card h2{font-size:1.05rem;color:#fff;margin-bottom:4px}
+  .card p{color:var(--muted);font-size:0.85rem;margin-bottom:8px}
+  input, select, button{
+    border-radius:8px;
+    border:0;
+    padding:10px 12px;
+    font-size:0.95rem;
+  }
+  input, select{background:#0f1317;color:#e6edf3}
+  button{background:var(--accent); color:white; font-weight:600; cursor:pointer}
+  button:active{transform:scale(0.99)}
+  .small{font-size:0.8rem;color:#9aa3b2;padding-top:6px}
+
+  @media (max-width:1100px){
+    .grid-wrap{ grid-template-columns: repeat(2, 1fr); grid-template-rows: auto auto auto; }
+  }
+  @media (max-width:700px){
+    body{padding-top:72px}
+    .grid-wrap{ grid-template-columns: 1fr; grid-template-rows: repeat(6, 1fr); padding:12px; }
+  }
+</style>
+
+<link rel="icon" id="favicon-link" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGUlEQVQYV2NkQAP/Gf4n4GBgYAAA/wP///+5AADeRgobNJd7TQAAAABJRU5ErkJggg==" />
+
+</head>
+<body>
+
+<nav>
+  <div class="left" id="nav-left"></div>
+  <div class="right" id="nav-right">
+    <img src="images/panic.png" alt="panic" title="Panic Button" id="panicImage">
+    <img src="images/chat.png" alt="chat" title="Chat" onclick="location.href='https://lolfactor39.github.io/chat/';">
+  </div>
+</nav>
+
+<div class="grid-wrap" id="controlPanel">
+  <!-- 1. Escape / Panic -->
+  <section class="card" id="card-escape">
+    <h2>1 — Escape / Panic</h2>
+    <p>Press <strong>Escape</strong> anywhere or click the button to redirect to a safe page and change the favicon.</p>
+    <button id="btn-trigger-escape">Trigger Panic</button>
+    <div class="small">Current escape target: <span id="current-target">Default</span></div>
+  </section>
+
+  <!-- 2. Favicon Changer -->
+  <section class="card" id="card-favicon">
+    <h2>2 — Favicon Changer</h2>
+    <p>Select a favicon and apply immediately.</p>
+    <select id="favicon-select" aria-label="Choose favicon">
+      <option value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGUlEQVQYV2NkQAP/Gf4n4GBgYAAA/wP///+5AADeRgobNJd7TQAAAABJRU5ErkJggg==">Default</option>
+      <option value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIUlEQVQYV2NkYGD4z0AEYBxVSFQAjHTAAoYg0GgLAAACI3Ad2kXxCoAAAAASUVORK5CYII=">Panic / Red</option>
+      <option value="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMjMxNUZGIiBoZWlnaHQ9IjUwcHgiIHZpZXdCb3g9IjAgMCA0OCA1MCIgd2lkdGg9IjUwcHgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTQyIDEwSDI0bC02LTZINTJ2NDRIMTBWMGhNNCAwaDM2djQwSDRWMHoiLz48L3N2Zz4=">Google Docs</option>
+      <option value="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNTAgNTAiIGZpbGw9IiMzQjYyRjIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTUwIDE0LjkzTDI1IDUwIDAgMTQuOTNMNDAgNTB6Ii8+PC9zdmc+">Google Drive</option>
+      <option value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAYAAAA7bUf6AAAB4ElEQVQ4T6WUP2hUURjGn1nYhEVFBaDCRFVogLKlBLWKSgkFqQkFAoIqWqELYF9gX7AFmvQXqMsdX0DhRFIyQ1QY7yzgcD9kbvFu+zszs3u8fMYWwWz3/uec77nnvPPfuYo9QxT9D74Nk8x3P8QrpJKm2wD+92u9+043s4x7IMqRiu9q9g4hGz/NQRkLV6I+ODoOC9IVyOslmAKmQT+kAC4IcMekipKo1TyzNf0CXMpqWy6lsbBwb0AB+YGknRHUzyMKM6EHoBcrgGx7qvQiPJbJdmArIDM0dvznKslfikm3C8Xg4Jxjx+NmHctj1pEPIkU4+cDQRjN/EDMs0QqMJYcBJCQBiSC+VNNyk3wJp8TA4LmzylDCL43QtrIEykiS6JLDLpBp0yoh9FsrYAhIRp2gVWgC4wSz5VpULPqvE47dsTj0u1R76gV0VhOJGV3kfPe9H1zwFMUX6a40AWMJWFAfQHnU5sQLa8D5GgiQpqJFCHoK+ITq7ZZC7QmQMCqEjOEo8yxawJN0l5u9qe7Jr9E0jcFShcwzLW0H6hNQI6foA9g0BGIZZgHYZPz9W/GuAmG2s3RdTtt8GxCU0FpB8bDawGpV6km5G9rZV43wCOoihQ25wz4AAAAASUVORK5CYII=">Google Classroom / Green</option>
+      <option value="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iOCIgc3R5bGU9ImZpbGw6I0M0Q0Q0QyIvPjxwYXRoIGQ9Ik0xNiAxOEg0OEw0OCA0NEgxNkwxNiAxOFoiIHN0eWxlPSJmaWxsOiNGRkYiLz48L3N2Zz4=">PowerSchool</option>
+    </select>
+    <button id="btn-apply-favicon">Apply Favicon</button>
+  </section>
+
+  <!-- 3. URL Opener -->
+  <section class="card" id="card-url">
+    <h2>3 — Open a Website</h2>
+    <p>Enter a URL to open in a new window safely.</p>
+    <input id="url-input" type="text" placeholder="https://example.com" autocomplete="off" />
+    <button id="btn-open-url">Open Link</button>
+    <div class="small">Press Enter while focused in the input to open.</div>
+  </section>
+
+  <!-- 4. Custom Redirect -->
+  <section class="card" id="card-custom">
+    <h2>4 — Custom Redirect</h2>
+    <p>Set a custom escape redirect that overrides default behavior.</p>
+    <input id="custom-escape" type="text" placeholder="https://safe.example" />
+    <button id="btn-set-custom">Set Escape Target</button>
+    <button id="btn-clear-custom" style="background:#666;margin-top:6px;">Clear Custom Target</button>
+  </section>
+
+  <!-- 5. Debug / Session -->
+  <section class="card" id="card-debug">
+    <h2>5 — Debug / Session</h2>
+    <p>Inspect session storage and page info.</p>
+    <button id="btn-log-session">Log sessionStorage</button>
+    <button id="btn-show-info" style="background:#666;margin-top:6px;">Show Page Info</button>
+    <pre id="debug-output" style="margin-top:8px;color:#9fb3d6;background:#071018;padding:8px;border-radius:6px;font-size:0.8rem;overflow:auto;max-height:120px;"></pre>
+  </section>
+
+  <!-- 6. Hotkeys / URL Mask -->
+  <section class="card" id="card-hotkeys">
+    <h2>6 — Hotkeys & Masked Path</h2>
+    <p>Mask the top URL like PowerSchool and configure hotkeys.</p>
+    <label style="font-size:0.9rem;margin-bottom:6px;display:block;color:var(--muted)">Escape behavior:</label>
+    <select id="escape-behavior">
+      <option value="default">Default (panic → classroom)</option>
+      <option value="favicon-only">Change favicon only</option>
+      <option value="custom-if-set">Use custom target (if set)</option>
+    </select>
+    <div style="height:10px"></div>
+    <label style="font-size:0.9rem;margin-bottom:6px;display:block;color:var(--muted)">Fake path (top URL):</label>
+    <select id="path-select">
+      <option value="/home">/home</option>
+      <option value="/dashboard">/dashboard</option>
+      <option value="/docs">/docs</option>
+      <option value="/settings">/settings</option>
+      <option value="/profile">/profile</option>
+      <option value="/help">/help</option>
+    </select>
+    <div style="height:10px"></div>
+    <label style="font-size:0.9rem;margin-bottom:6px;display:block;color:var(--muted)">Custom Panic Key:</label>
+    <input id="custom-key-input" type="text" maxlength="1" placeholder="Press a key..." />
+    <div class="small">
+      Hotkeys: <strong>Esc</strong> = panic; <strong>Ctrl+Shift+L</strong> logs sessionStorage; <strong>Custom</strong> triggers panic.
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const DEFAULT_ESCAPE="https://classroom.google.com";
+  const DEFAULT_FAV="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGUlEQVQYV2NkQAP/Gf4n4GBgYAAA/wP///+5AADeRgobNJd7TQAAAABJRU5ErkJggg==";
+
+  function changeFavicon(url){
+    let link=document.querySelector("link[rel~='icon']");
+    if(!link){ link=document.createElement("link"); link.rel="icon"; document.head.appendChild(link);}
+    link.href=url;
+  }
+
+  function maskPath(fakePath){
+    if(!fakePath.startsWith("/")) fakePath="/"+fakePath;
+    history.replaceState({}, document.title, fakePath);
+  }
+
+  function performEscape(){
+    const fakePath=document.getElementById("path-select")?.value||"/home";
+    maskPath(fakePath);
+    const fav=document.getElementById("favicon-select")?.value||DEFAULT_FAV;
+    changeFavicon(fav);
+    const custom=sessionStorage.getItem("customEscapeTarget");
+    window.location.href=custom||DEFAULT_ESCAPE;
+  }
+
+  const btnPanic=document.getElementById("btn-trigger-escape");
+  const panicImg=document.getElementById("panicImage");
+  const btnApplyFav=document.getElementById("btn-apply-favicon");
+  const urlInput=document.getElementById("url-input");
+  const btnOpenUrl=document.getElementById("btn-open-url");
+  const customInput=document.getElementById("custom-escape");
+  const btnSetCustom=document.getElementById("btn-set-custom");
+  const btnClearCustom=document.getElementById("btn-clear-custom");
+  const debugOut=document.getElementById("debug-output");
+  const btnLogSession=document.getElementById("btn-log-session");
+  const btnShowInfo=document.getElementById("btn-show-info");
+  const currentTargetElem=document.getElementById("current-target");
+  const escapeBehaviorSelect=document.getElementById("escape-behavior");
+  const pathSelect=document.getElementById("path-select");
+  const customKeyInput=document.getElementById("custom-key-input");
+
+  // Load previous custom key
+  if(sessionStorage.getItem("customEscapeKey")) customKeyInput.value=sessionStorage.getItem("customEscapeKey");
+
+  customKeyInput.addEventListener("input",()=>{
+    const k=customKeyInput.value.trim();
+    if(k.length===1) sessionStorage.setItem("customEscapeKey",k.toLowerCase());
+  });
+
+  function openInIframeWindow(url){
+    if(!url) return alert("Enter a URL");
+    if(!/^https?:\/\//i.test(url)) url="https://"+url;
+    const w=window.open("about:blank","_blank");
+    if(!w){ alert("Popup blocked"); return;}
+    w.document.body.style.margin="0"; w.document.body.style.height="100vh";
+    const iframe=document.createElement("iframe");
+    iframe.src=url; iframe.style.width="100%"; iframe.style.height="100%"; iframe.style.border="none";
+    w.document.body.appendChild(iframe);
+  }
+
+  function setCustomTarget(val){
+    if(!val){ sessionStorage.removeItem("customEscapeTarget"); currentTargetElem.textContent="Default"; return;}
+    sessionStorage.setItem("customEscapeTarget",val); currentTargetElem.textContent=val;
+  }
+
+  btnPanic?.addEventListener("click",performEscape);
+  panicImg?.addEventListener("click",performEscape);
+  btnApplyFav?.addEventListener("click",()=>{ changeFavicon(document.getElementById("favicon-select").value||DEFAULT_FAV); alert("Favicon applied"); });
+  btnOpenUrl?.addEventListener("click",()=>openInIframeWindow(urlInput.value.trim()));
+  urlInput?.addEventListener("keydown",e=>{ if(e.key==="Enter") openInIframeWindow(urlInput.value.trim()); });
+  btnSetCustom?.addEventListener("click",()=>{ const v=customInput.value.trim(); if(!v)return alert("Enter a URL"); setCustomTarget(v); alert("Custom target set"); });
+  btnClearCustom?.addEventListener("click",()=>{ setCustomTarget(null); customInput.value=""; alert("Custom target cleared"); });
+  btnLogSession?.addEventListener("click",()=>{ console.log(sessionStorage); debugOut.textContent=JSON.stringify(Object.fromEntries(Object.entries(sessionStorage)),null,2); });
+  btnShowInfo?.addEventListener("click",()=>{ debugOut.textContent=JSON.stringify({location:window.location.href,pathname:window.location.pathname,title:document.title},null,2); });
+
+  // Hotkeys
+  document.addEventListener("keydown",e=>{
+    const customKey=sessionStorage.getItem("customEscapeKey");
+    if(e.key==="Escape" || (customKey && e.key.toLowerCase()===customKey)) performEscape();
+    if(e.ctrlKey && e.shiftKey && e.key.toLowerCase()==="l"){ console.log(sessionStorage); }
+  });
+
+  pathSelect?.addEventListener("change",()=>maskPath(pathSelect.value));
+
+})();
+</script>
+
+<script>
+// Dynamic navbar based on roles
+const navLeft=document.getElementById('nav-left');
+const navRight=document.getElementById('nav-right');
+function createNavItem(text, href){
+  const span=document.createElement('span');
+  span.textContent=text; span.style.marginRight='12px';
+  span.style.cursor='pointer'; span.onclick=()=>window.location.href=href;
+  span.onmouseover=()=>span.style.color='#4f7cff';
+  span.onmouseout=()=>span.style.color='inherit';
+  return span;
+}
+
+let isAdmin=sessionStorage.getItem('isAdmin')==='true';
+let freeAccess=sessionStorage.getItem('freeAccess')==='true';
+
+if(isAdmin){
+  navLeft.appendChild(createNavItem('Gamer HUBS - Admin','./games.html?admin=True'));
+  navRight.appendChild(createNavItem('Admin Table','./adtable.html'));
+  navRight.appendChild(createNavItem('Leaderboard','./leaderboard.html?admin=True'));
+}else if(freeAccess){
+  navLeft.appendChild(createNavItem('Gamer HUBS - Free','./games.html?free=True'));
+}else{
+  navLeft.appendChild(createNavItem('Gamer HUBS','./games.html'));
+}
+</script>
+
+</body>
+</html>

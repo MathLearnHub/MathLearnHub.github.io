@@ -21,6 +21,7 @@
     </div>
     <div id="nav-right">
       <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
+      
       <img src="images/panic.png" alt="Panic Button" id="panic-button"
         onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
       <img src="images/chat.png" alt="Chat" id="chat-button"
@@ -31,6 +32,11 @@
       <h3 id="apps-button" style="cursor: pointer;" onclick="window.location.href='./apps.html'" title="Apps & Tools">
         Apps</h3>
       -->
+      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
+        title="Home">Settings</h3>
+      <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
+        About Me
+      </h3>
     </div>
   </nav>
   <script src="js/uttils.js"></script>
@@ -42,7 +48,6 @@
     const accescode = new URLSearchParams(window.location.search).get('free');
     const navLeft = document.getElementById('nav-left');
     const navRight = document.getElementById('nav-right');
-
     function createNavTitle(text, href) {
       const h3 = document.createElement('h3');
       h3.textContent = text;
@@ -57,6 +62,7 @@
       const adminTable = createNavTitle('Admin Table', './adtable.html');
       navRight.appendChild(adminTable);
       navRight.appendChild(createNavTitle('Leaderboard', './leaderboard.html?admin=True'));
+      sessionStorage.setItem("userroleis","admin");
       document.title = 'Gamer Hubs - Admin';
       sessionStorage.setItem("isAdmin", "true")
       window.trackUser()
@@ -68,6 +74,7 @@
       /*navRight.appendChild(createNavTitle('Leaderboard', './leaderboard.html?frees=true'));*/
       //The fun - Main code
       sessionStorage.setItem('freeAccess', 'true');
+      sessionStorage.setItem("userroleis","freeuser");
 
     }
     else if (admin === "False") {
@@ -76,10 +83,12 @@
       document.title = 'Studying';
       let uids = sessionStorage.getItem('uid');
       console.log(uids);
+      sessionStorage.setItem("userroleis","user");
       window.trackUserOnlineStatus(uids);
       window.trackUser(uids);
     }
   </script>
+  
   <div id="search-section">
     <img src="images/stubott.png" alt="Game Hub Logo" id="search-logo">
     <div class="search-container">
