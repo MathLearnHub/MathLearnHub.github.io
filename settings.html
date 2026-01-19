@@ -232,15 +232,38 @@
   });
 
   function openInIframeWindow(url){
-    if(!url) return alert("Enter a URL");
-    if(!/^https?:\/\//i.test(url)) url="https://"+url;
-    const w=window.open("about:blank","_blank");
-    if(!w){ alert("Popup blocked"); return;}
-    w.document.body.style.margin="0"; w.document.body.style.height="100vh";
-    const iframe=document.createElement("iframe");
-    iframe.src=url; iframe.style.width="100%"; iframe.style.height="100%"; iframe.style.border="none";
-    w.document.body.appendChild(iframe);
+    const win = window.open("about:blank", "_blank");
+    if (!win) return;
+
+    win.document.open();
+
+    // Make the page fill the screen
+    win.document.write(`
+      <style>
+        html, body {
+          margin: 0;
+          padding: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          background: black;
+        }
+      </style>
+    `);
+
+    const iframe = win.document.createElement("iframe");
+    iframe.src = url;
+    iframe.style.position = "fixed";
+    iframe.style.top = "0";
+    iframe.style.left = "0";
+    iframe.style.width = "100vw";
+    iframe.style.height = "100vh";
+    iframe.style.border = "none";
+
+    win.document.body.appendChild(iframe);
+    win.document.close();
   }
+
 
   function setCustomTarget(val){
     if(!val){ sessionStorage.removeItem("customEscapeTarget"); currentTargetElem.textContent="Default"; return;}
