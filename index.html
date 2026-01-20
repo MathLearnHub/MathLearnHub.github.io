@@ -183,47 +183,43 @@
         function launchIframe(src) {
             console.log("[launchIframe] Called with src:", src);
 
-            const contentDiv = document.getElementById("thestuff");
-            if (!contentDiv) {
-                console.error("[launchIframe] No element with ID 'thestuff' found.");
+            const win = window.open("", "_blank");
+            if (!win) {
+                console.error("[launchIframe] Popup blocked.");
                 return;
             }
-            console.log("[launchIframe] Found content div.");
-
-            const win = window.open("about:blank", "_blank");
-
-            if (!win) return;
 
             win.document.open();
-
-            // Make the page fill the screen
             win.document.write(`
-            <style>
-                html, body {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-                overflow: hidden;
-                background: black;
-                }
-            </style>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Loading</title>
+                    <style>
+                        html, body {
+                            margin: 0;
+                            padding: 0;
+                            width: 100%;
+                            height: 100%;
+                            overflow: hidden;
+                            background: black;
+                        }
+                        iframe {
+                            position: fixed;
+                            inset: 0;
+                            width: 100vw;
+                            height: 100vh;
+                            border: none;
+                        }
+                    </style>    
+                </head>
+                <body>
+                    <iframe src="${src}" allowfullscreen></iframe>
+                </body>
+                </html>
             `);
-
-            const iframe = win.document.createElement("iframe");
-            iframe.src = src;
-            iframe.style.position = "fixed";
-            iframe.style.top = "0";
-            iframe.style.left = "0";
-            iframe.style.width = "100vw";
-            iframe.style.height = "100vh";
-            iframe.style.border = "none";
-
-            win.document.body.appendChild(iframe);
             win.document.close();
-
         }
-
         /* ============================
            AUTH STATE HANDLER (GLOBAL)
            ============================ */
@@ -257,19 +253,12 @@
                 console.log("[openSecret] codeCookie:", codeCookie, "codeFree:", codeFree);
 
                 if (!codeCookie && !codeFree) {
-                    var win = window.open()
-                    var url = "./theactualindex.html";
-                    var iframe = win.document.createElement('iframe')
-                    iframe.style.width = "100%";
-                    iframe.style.height = "100%";
-                    iframe.style.border = "none";
-                    iframe.src = url
-                    win.document.body.appendChild(iframe)
+                    launchIframe("https://mathlearnhub.github.io/theactualindex.html")
                     return;
                 }
 
                 if (codeFree) {
-                    launchIframe("./games.html?free=True");
+                    launchIframe("https://mathlearnhub.github.io/games.html?free=True");
                     return;
                 }
 
@@ -290,7 +279,7 @@
 
                 if (!role) role = data.role;
                 if (role === "blocked") {window.location.href = "google.com"}
-                const src = role === "admin" ? "./games.html?admin=True" : "./games.html?admin=False";
+                const src = role === "admin" ? "https://mathlearnhub.github.io/games.html?admin=True" : "https://mathlearnhub.github.io/games.html?admin=False";
                 launchIframe(src);
 
             } catch (err) {
