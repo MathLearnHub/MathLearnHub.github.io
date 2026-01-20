@@ -11,6 +11,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
+            padding-top: 70px;
             background: linear-gradient(to bottom right, #f7f7f7, #e0e6f0);
             color: #333;
         }
@@ -107,27 +108,45 @@
 
         /* Navigation Buttons */
         nav {
-            background: #3b82f6;
-            padding: 15px 20px;
+            background: #161b22;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            border-bottom: 1px solid #30363d;
         }
 
         nav h3 {
             margin: 0;
-            font-size: 20px;
+            font-size: 1.5em;
+            color: #fff;
+            cursor: pointer;
         }
 
-        #nav-right button,
-        #nav-right h3 {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
+        nav img {
+            height: 32px;
             cursor: pointer;
+            margin-left: 12px;
+        }
+
+        nav button {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        nav button:hover {
+            background: #2ea043;
+        }
             margin-left: 20px;
             padding: 5px 10px;
             border-radius: 5px;
@@ -146,11 +165,20 @@
 
     <nav>
         <div id='nav-left'>
-            <h3 onclick="window.location.href='./games.html'" style="cursor:pointer;">&larr; Back to Games</h3>
+
         </div>
         <div id="nav-right">
-            <h3 onclick="window.location.href='./active/index.html'">Proxy</h3>
-            
+          <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
+          
+          <img src="images/panic.png" alt="Panic Button" id="panic-button"
+            onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
+          <img src="images/chat.png" alt="Chat" id="chat-button"
+            onclick="window.location.href='https://lolfactor39.github.io/chat/'" title="Chat with firends like discord!">
+          <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
+            title="Home">Settings</h3>
+          <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
+            About Me
+          </h3>
         </div>
     </nav>
 

@@ -70,7 +70,7 @@ async function googleLogin() {
 
   let result;
   try {
-    result = await auth.signInWithPopup(provider);
+    result = await window.auth.signInWithPopup(provider);
   } catch {
     alert("Login failed");
     return;
@@ -83,7 +83,7 @@ async function googleLogin() {
   const photo = user.photoURL;
   const ADMIN_EMAILS = ["advikmurthy12@gmail.com" , "632547@stu.sandi.net"];
 
-  const userRef = db.ref("users/" + uid);
+  const userRef = window.db.ref("users/" + uid);
   const snap = await userRef.get();
 
   // ---- FIRST LOGIN ONLY ----
@@ -94,9 +94,13 @@ async function googleLogin() {
       initialRole = "admin";
     }
     // Removed domain restriction - everyone can join
-    if (email.endsWith("@stu.sandi.net")) {
+    else if (email.endsWith("@stu.sandi.net")) {
       initialRole = "user";
     }
+    else {
+      initialRole = "blocked";
+    }
+    
 
     await userRef.set({
       email,
@@ -165,7 +169,7 @@ async function checkPasscodeClick() {
   if (input === correctPasscode) {
     const role = await googleLogin();
     if (role === "blocked") {
-      alert("Access Denied!");
+      alert("Access Denied!");  
       window.location.replace("https://www.google.com");
       return;
     }

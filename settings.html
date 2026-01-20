@@ -41,8 +41,18 @@
 
   nav .left{display:flex; gap:12px; align-items:center;}
   nav .right{display:flex; gap:12px; align-items:center;}
-  nav img{height:34px; cursor:pointer;}
-  nav span{font-size:1rem; color:#e6edf3; cursor:pointer;}
+  nav img{height:32px; cursor:pointer; margin-left:12px;}
+  nav h3{font-size:1rem; color:#fff; cursor:pointer;}
+  nav button{
+    background: #238636;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  nav button:hover{background: #2ea043;}
 
   .grid-wrap{
     height: calc(100vh - var(--nav-h));
@@ -95,10 +105,21 @@
 <body>
 
 <nav>
-  <div class="left" id="nav-left"></div>
-  <div class="right" id="nav-right">
-    <img src="images/panic.png" alt="panic" title="Panic Button" id="panicImage">
-    <img src="images/chat.png" alt="chat" title="Chat" onclick="location.href='https://lolfactor39.github.io/chat/';">
+  <div id='nav-left'>
+
+  </div>
+  <div id="nav-right">
+    <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
+    
+    <img src="images/panic.png" alt="Panic Button" id="panic-button"
+      onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
+    <img src="images/chat.png" alt="Chat" id="chat-button"
+      onclick="window.location.href='https://lolfactor39.github.io/chat/'" title="Chat with firends like discord!">
+    <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
+      title="Home">Settings</h3>
+    <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
+      About Me
+    </h3>
   </div>
 </nav>
 

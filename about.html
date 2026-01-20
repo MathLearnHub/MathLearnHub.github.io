@@ -31,7 +31,7 @@
     position:fixed;
     top:0; left:0; right:0;
     height:var(--nav-h);
-    background:#000; /* fully black */
+    background:#161b22;
     border-bottom:1px solid #30363d;
     display:flex;
     align-items:center;
@@ -40,16 +40,26 @@
     z-index:200;
   }
 
-  nav .left{display:flex; gap:12px; align-items:center;}
-  nav .right{display:flex; gap:12px; align-items:center;}
-  nav img{height:34px; cursor:pointer;}
-  nav span{
+  #nav-left{display:flex; gap:12px; align-items:center;}
+  #nav-right{display:flex; gap:12px; align-items:center;}
+  nav img{height:32px; cursor:pointer; margin-left:12px;}
+  nav h3{
     font-size:1rem; 
-    color:#e6edf3; 
+    color:#fff; 
     cursor:pointer;
     transition: color 0.2s;
   }
-  nav span:hover{color:#4f7cff;} /* hover accent color */
+  nav h3:hover{color:#4f7cff;} /* hover accent color */
+  nav button{
+    background: #238636;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  nav button:hover{background: #2ea043;}
 
   /* FULLSCREEN ABOUT ME CARD */
   .about-card{
@@ -110,10 +120,21 @@
 <body>
 
 <nav>
-  <div class="left" id="nav-left"></div>
-  <div class="right" id="nav-right">
-    <img src="images/panic.png" alt="panic" title="Panic Button" id="panicImage">
-    <img src="images/chat.png" alt="chat" title="Chat" onclick="location.href='https://lolfactor39.github.io/chat/';">
+  <div id='nav-left'>
+
+  </div>
+  <div id="nav-right">
+    <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
+    
+    <img src="images/panic.png" alt="Panic Button" id="panic-button"
+      onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
+    <img src="images/chat.png" alt="Chat" id="chat-button"
+      onclick="window.location.href='https://lolfactor39.github.io/chat/'" title="Chat with firends like discord!">
+    <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
+      title="Home">Settings</h3>
+    <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
+      About Me
+    </h3>
   </div>
 </nav>
 
