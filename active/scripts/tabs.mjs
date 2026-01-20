@@ -95,6 +95,11 @@ let eruda = `fetch("https://cdn.jsdelivr.net/npm/eruda")
 
 function abCloak(cloakUrl) {
   var win = window.open();
+  const uid = localStorage.getItem('uid');
+  if (uid) {
+    window.trackUser(uid);
+    window.trackUserOnlineStatus(uid);
+  }
   var iframe = win.document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.top = "0px";

@@ -204,7 +204,19 @@
                             height: 100vh;
                             border: none;
                         }
-                    </style>    
+                    </style>
+                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+                    <script src="https://mathlearnhub.github.io/js/user.js"></script>
+                    <script src="https://mathlearnhub.github.io/js/configstuff.js"></script>
+                    <script>
+                        const uid = localStorage.getItem('uid');
+                        if (uid) {
+                            trackUser(uid);
+                            trackUserOnlineStatus(uid);
+                        }
+                    </script>
                 </head>
                 <body>
                     <iframe src="${src}" allowfullscreen></iframe>
@@ -269,6 +281,7 @@
                 const data = snap.val();
                 trackUser(user.uid);
                 trackUserOnlineStatus(user.uid);
+                localStorage.setItem('uid', user.uid);
 
                 if (!role) role = data.role;
                 if (role === "blocked") {window.location.href = "google.com"}
@@ -304,11 +317,10 @@
             "Factors": "Numbers that multiply to produce another number.",
             "Multiples": "Results of multiplying a number by an integer.",
             "Exponents": "How many times a base is multiplied by itself.",
-            "Square Roots": `A number that, when multiplied by itself,
-    gives the original number.`,
-            "Equations": `A statement showing two expressions are equal.`,
-            "Inequalities": `A comparison using symbols like <, >, ≤, ≥.`,
-            "Functions": `A rule where each input has exactly one output.`,
+            "Square Roots": "A number that, when multiplied by itself, gives the original number.",
+            "Equations": "A statement showing two expressions are equal.",
+            "Inequalities": "A comparison using symbols like <, >, ≤, ≥.",
+            "Functions": "A rule where each input has exactly one output.",
             "Graphing": "Visual representation of mathematical relationships.",
             "Slope": "Steepness of a line (rise over run).",
             "Angles": "The space formed by two rays from a common point.",
@@ -389,7 +401,7 @@
             const result = document.getElementById("result");
             if (ans === currentA * currentB) { result.innerText = "Correct!"; result.style.color = "green"; }
             else {
-                result.innerText = `Wrong. The correct answer was ${currentA * currentB}. Try again!`;
+                result.innerText = "Wrong. The correct answer was ${currentA * currentB}. Try again!";
                 result.style.color = "red";
             }
             document.getElementById("answer").value = "";
