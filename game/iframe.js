@@ -1,6 +1,19 @@
 // Firebase was already initialized in configstuff.js
 // const auth = firebase.auth();
 // const db = firebase.database();
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAIzv7rOF5LtQmC1AVeQqAjrGHUZnJomFY",
+  authDomain: "track-study-9f2eb.firebaseapp.com",
+  projectId: "track-study-9f2eb",
+  storageBucket: "track-study-9f2eb.firebasestorage.app",
+  messagingSenderId: "461107985386",
+  appId: "1:461107985386:web:15c694a7c946da0a5d1093",
+  databaseURL: "https://track-study-9f2eb-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
 firebase.database().ref(".info/connected").on("value", snap => {
     console.log("DB connected:", snap.val());
