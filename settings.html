@@ -216,7 +216,7 @@
       <select id="favicon-select" aria-label="Choose favicon">
         <option
           value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGUlEQVQYV2NkQAP/Gf4n4GBgYAAA/wP///+5AADeRgobNJd7TQAAAABJRU5ErkJggg==">
-          Default</option>
+          Default</option> 
         <option
           value="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIUlEQVQYV2NkYGD4z0AEYBxVSFQAjHTAAoYg0GgLAAACI3Ad2kXxCoAAAAASUVORK5CYII=">
           Panic / Red</option>
@@ -312,7 +312,7 @@
       function maskPath(fakePath) {
         if (!fakePath.startsWith("/")) fakePath = "/" + fakePath;
         history.replaceState({}, document.title, fakePath);
-      }
+      } //bruhs
 
       function performEscape() {
         const fakePath = document.getElementById("path-select")?.value || "/home";
