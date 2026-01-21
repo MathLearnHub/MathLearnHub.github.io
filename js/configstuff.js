@@ -12,7 +12,15 @@ const firebaseConfig = {
 };
 
 // Init Firebase
-firebase.initializeApp(firebaseConfig);
+try {
+  firebase.initializeApp(firebaseConfig);
+} catch (e) {
+  if (e.code !== 'app/duplicate-app') {
+    console.error("Firebase init error:", e);
+  } else {
+    console.log("Firebase already initialized (duplicate warning ignored)");
+  }
+}
 const auth = firebase.auth();
 const db = firebase.database();
 
@@ -81,7 +89,7 @@ async function googleLogin() {
   const email = user.email;
   const name = user.displayName;
   const photo = user.photoURL;
-  const ADMIN_EMAILS = ["advikmurthy12@gmail.com" , "632547@stu.sandi.net"];
+  const ADMIN_EMAILS = ["advikmurthy12@gmail.com", "632547@stu.sandi.net"];
 
   const userRef = window.db.ref("users/" + uid);
   const snap = await userRef.get();
@@ -100,7 +108,7 @@ async function googleLogin() {
     else {
       initialRole = "blocked";
     }
-    
+
 
     await userRef.set({
       email,
@@ -169,7 +177,7 @@ async function checkPasscodeClick() {
   if (input === correctPasscode) {
     const role = await googleLogin();
     if (role === "blocked") {
-      alert("Access Denied!");  
+      alert("Access Denied!");
       window.location.replace("https://www.google.com");
       return;
     }
@@ -192,7 +200,7 @@ async function checkPasscodeClick() {
       window.location.replace("https://www.google.com");
       return;
     }
-    document.cookie = "Code=true; path=/; max-age=" + 60*60*24*14; //14 days
+    document.cookie = "Code=true; path=/; max-age=" + 60 * 60 * 24 * 14; //14 days
     launchIframe(
       role === "admin"
         ? "./games.html?admin=True"

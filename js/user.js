@@ -1,4 +1,12 @@
 // user.js - Firebase v8
+
+// user.js - Firebase v8
+// Assumes firebase.initializeApp() has already been called in configstuff.js
+
+// Assumes firebase.initializeApp() has already been called in configstuff.js
+// auth and db are already defined globally in configstuff.js
+
+
 db.ref(".info/connected").on("value", snap => {
   console.log("db connected:", snap.val());
 });
@@ -82,27 +90,39 @@ function trackUser(uid) {
 
 
 function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for(let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') { 
-            c = c.substring(1, c.length);
-        }
-        if (c.indexOf(nameEQ) === 0) {
-            return c.substring(nameEQ.length, c.length);
-        }
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1, c.length);
     }
-    return null; 
+    if (c.indexOf(nameEQ) === 0) {
+      return c.substring(nameEQ.length, c.length);
+    }
+  }
+  return null;
 }
 
 
 
 // Run tracking on page load if uid exists
-const uid = localStorage.getItem('uid');
+const uid = sessionStorage.getItem('uid') || localStorage.getItem('uid');
 if (uid) {
-    trackUser(uid);
-    trackUserOnlineStatus(uid);
+  trackUser(uid);
+  trackUserOnlineStatus(uid);
+}
+
+function onUserChange(callback) {
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      db.ref(`users/${user.uid}`).once('value').then(snap => {
+        callback(snap.val());
+      });
+    } else {
+      callback(null);
+    }
+  });
 }
 
 window.makeUserProp = makeUserProp;
@@ -111,4 +131,5 @@ window.editUserProp = editUserProp;
 window.deleteUserProp = deleteUserProp;
 window.trackUserOnlineStatus = trackUserOnlineStatus;
 window.trackUser = trackUser;
+window.onUserChange = onUserChange;
 

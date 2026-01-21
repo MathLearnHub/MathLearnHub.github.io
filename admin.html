@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -194,25 +195,26 @@
     }
   </style>
 </head>
+
 <body>
   <nav>
     <div id='nav-left'>
-    <h3 style="cursor: pointer;" onclick="window.location.href = './games.html?admin=True'" title="Games">
+      <h3 style="cursor: pointer;" onclick="window.location.href = './games.html?admin=True'" title="Games">
         GAMER Hubs - Admin
-    </h3>
+      </h3>
 
     </div>
-    <div id="nav-right">      
+    <div id="nav-right">
       <img src="images/panic.png" alt="Panic Button" id="panic-button"
         onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
       <img src="images/chat.png" alt="Chat" id="chat-button"
         onclick="window.location.href='https://lolfactor39.github.io/chat/'" title="Chat with firends like discord!">
-      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
-        title="Home">Settings</h3>
+      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'" title="Home">
+        Settings</h3>
       <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
         About Me
       </h3>
-      
+
     </div>
   </nav>
 
@@ -243,19 +245,30 @@
   </div>
 
   <script src="js/configstuff.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="js/user.js"></script>
+  <script src="js/antiblock.js"></script>
+  <script src="js/uttils.js"></script>
   <script>
     let uids = sessionStorage.getItem('uid');
-    window.trackUser(uids);
-    window.trackUserOnlineStatus(uids);
+    trackUser(uids);
+    trackUserOnlineStatus(uids);
   </script>
   <script>
     const adminContent = document.getElementById('admin-content');
     const notAdmin = document.getElementById('not-admin');
     const loading = document.getElementById('loading');
+
+    function onUserChange(callback) {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          db.ref(`users/${user.uid}`).once('value').then(snap => {
+            callback(snap.val());
+          });
+        } else {
+          callback(null);
+        }
+      });
+    }
 
     // Check authentication and admin role
     onUserChange(profile => {
@@ -306,4 +319,5 @@
     });
   </script>
 </body>
+
 </html>

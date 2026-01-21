@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
   <title>Admin Panel</title>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -15,6 +16,7 @@
       margin: 0;
       padding: 0;
     }
+
     .no-cursor-pointer {
       cursor: default;
     }
@@ -176,8 +178,8 @@
         onclick="window.location.href='https://classroom.google.com'">
       <img src="images/chat.png" alt="Chat" title="Chat"
         onclick="window.location.href='https://lolfactor39.github.io/chat/'">
-      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
-        title="Home">Settings</h3>
+      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'" title="Home">
+        Settings</h3>
     </div>
   </nav>
 
@@ -193,7 +195,7 @@
           <th>Role</th>
           <th>Name</th>
           <th>Time Spent</th>
-          <th> Created  </th>
+          <th> Created </th>
           <th>Online</th>
           <th>Leaderboard Ban</th>
           <th>Controls</th>
@@ -202,18 +204,10 @@
       <tbody id="adminTable"></tbody>
     </table>
   </div>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="./js/configstuff.js"></script>
-  <script>
-    let uids = sessionStorage.getItem('uid');
-    window.trackUser(uids);
-    window.trackUserOnlineStatus(uids);
-  </script>
+
   <script>
     /* ===== CONFIG ===== */
-    const OWNER_EMAIL = ["advikmurthy12@gmail.com", "664904@stu.sandi.net" , "631129@stu.sandi.net"].map(e => e.toLowerCase());
+    const OWNER_EMAIL = ["advikmurthy12@gmail.com", "664904@stu.sandi.net", "631129@stu.sandi.net"].map(e => e.toLowerCase());
 
     const table = document.getElementById("adminTable");
     const search = document.getElementById("search");
@@ -239,7 +233,9 @@
     }
 
     /* ===== FIREBASE LISTENER ===== */
+    console.log("Setting up Firebase listener in adtable.html");
     firebase.database().ref("users").on("value", snap => {
+      console.log("Got firebase data:", snap.val());
       cache = snap.val() || {};
       renderTable();
     });

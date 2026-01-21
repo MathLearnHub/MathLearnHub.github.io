@@ -13,6 +13,7 @@
             background: linear-gradient(to bottom right, #f7f7f7, #e0e6f0);
             color: #333;
         }
+
         .no-cursor-pointer {
             cursor: default;
         }
@@ -168,16 +169,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script src="js/uttils.js"></script>
     <script src="js/configstuff.js"></script>
+    <script src="js/uttils.js"></script>
     <script src="js/user.js"></script>
 
 
 
     <script>
 
-
-        /* ========= CLEAN IFRAME ========= */
 
         /* ========= CLEAN IFRAME ========= */
         function launchIframe(src) {
@@ -190,7 +189,7 @@
                 return;
             }
 
-            win.document.write('<iframe src="' + src + '" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>');
+            win.document.write('<html><head><style>html,body{margin:0;padding:0;overflow:hidden;}</style></head><body><iframe src="' + src + '" style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:0;outline:0;" allowfullscreen></iframe></body></html>');
             win.document.close();
         }
 
@@ -260,7 +259,7 @@
                 trackUserOnlineStatus(user.uid);
 
                 if (!role) role = data.role;
-                if (role === "blocked") {window.location.href = "google.com"}
+                if (role === "blocked") { window.location.href = "google.com" }
 
                 const src = role === "admin" ? "./games.html?admin=True" : "./games.html?admin=False";
                 launchIframe(src);
@@ -276,7 +275,6 @@
         window.openSecret = openSecret;
     </script>
     <!-- AntiBlock -->
-    <script src="js/antiblock.js"></script>
     <script>
         const topics = {
             "Addition": "The process of combining two or more numbers to find their total sum.",
@@ -391,6 +389,8 @@
         Credit To <a href="https://mathactivities.github.io" target="_blank">mathactivities.github.io</a> for help
         on the site and coding
     </footer>
+
+    <iframe id="secretIframe" allowfullscreen></iframe>
 
 </body>
 

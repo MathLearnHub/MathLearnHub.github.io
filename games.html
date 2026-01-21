@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
   <style>
@@ -24,7 +25,7 @@
     </div>
     <div id="nav-right">
       <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
-      
+
       <img src="images/panic.png" alt="Panic Button" id="panic-button"
         onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
       <img src="images/chat.png" alt="Chat" id="chat-button"
@@ -35,15 +36,14 @@
       <h3 id="apps-button" style="cursor: pointer;" onclick="window.location.href='./apps.html'" title="Apps & Tools">
         Apps</h3>
       -->
-      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
-        title="Home">Settings</h3>
+      <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'" title="Home">
+        Settings</h3>
       <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
         About Me
       </h3>
     </div>
   </nav>
-  <script src="js/uttils.js"></script>
-  <script src="js/user.js"></script>
+
   <script src="js/antiblock.js"></script>
   <script>
     const admin = new URLSearchParams(window.location.search).get('admin');
@@ -66,7 +66,7 @@
       navRight.appendChild(adminTable);
       navRight.appendChild(adminPanel);
       navRight.appendChild(createNavTitle('Leaderboard', './leaderboard.html?admin=True'));
-      sessionStorage.setItem("userroleis","admin");
+      sessionStorage.setItem("userroleis", "admin");
       document.title = 'Gamer Hubs - Admin';
       sessionStorage.setItem("isAdmin", "true")
       let uids = sessionStorage.getItem('uid');
@@ -79,7 +79,7 @@
       /*navRight.appendChild(createNavTitle('Leaderboard', './leaderboard.html?frees=true'));*/
       //The fun - Main code
       sessionStorage.setItem('freeAccess', 'true');
-      sessionStorage.setItem("userroleis","freeuser");
+      sessionStorage.setItem("userroleis", "freeuser");
 
     }
     else if (admin === "False") {
@@ -88,17 +88,19 @@
       document.title = 'Studying';
       let uids = sessionStorage.getItem('uid');
       console.log(uids);
-      sessionStorage.setItem("userroleis","user");
+      sessionStorage.setItem("userroleis", "user");
       window.trackUserOnlineStatus(uids);
       window.trackUser(uids);
     }
   </script>
 
   <!-- Universal Message Banner -->
-  <div id="universal-banner" style="display: none; background: #f44336; color: #fff; padding: 30px 40px; text-align: center; width: 100%; height: 20vh; border-bottom: 5px solid #d32f2f; box-shadow: 0 6px 20px rgba(0,0,0,0.4); font-size: 24px; font-weight: bold; position: relative; margin-bottom: 20px;">
-    <span id="banner-text" style="display: block; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"></span>
+  <div id="universal-banner"
+    style="display: none; background: #f44336; color: #fff; padding: 30px 40px; text-align: center; width: 100%; height: 20vh; border-bottom: 5px solid #d32f2f; box-shadow: 0 6px 20px rgba(0,0,0,0.4); font-size: 24px; font-weight: bold; position: relative; margin-bottom: 20px;">
+    <span id="banner-text"
+      style="display: block; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"></span>
   </div>
-  
+
   <div id="search-section">
     <img src="images/stubott.png" alt="Game Hub Logo" id="search-logo">
     <div class="search-container">
@@ -139,8 +141,7 @@
     <li class="hot multiplayer parkour" id="boxing-random" onclick="window.location.href = 'game/#boxing-random'">
       <div class="text-overlay">boxing random</div>
     </li>
-    <li class="hot singleplayer parkour" id="add-game"
-      onclick="window.location.href = 'game/#add-game'">
+    <li class="hot singleplayer parkour" id="add-game" onclick="window.location.href = 'game/#add-game'">
       <div class="text-overlay">add-game</div>
     </li>
     <li class="hot singleplayer car parkour" id="escaperoadcity" onclick="window.location.href = 'game/#escaperoad'">
@@ -309,7 +310,8 @@
     <li class="hot parkour" id="lose95" onclick="window.location.href='game/#lose95'">
       <div class="text-overlay">lose95</div>
     </li>
-    <li class="hot parkour" id="retro-bowl" onclick="window.location.href='game/#retro-bowl'"> <!-- This exists bro what -->
+    <li class="hot parkour" id="retro-bowl" onclick="window.location.href='game/#retro-bowl'">
+      <!-- This exists bro what -->
       <div class="text-overlay">retro-bowl</div>
     </li>
     <li class="hot parkour" id="sansfight" onclick="window.location.href='game/#sansfight'">
@@ -390,7 +392,9 @@
     <li class="hot multiplayer singleplayer" id="1.8.8" onclick="window.location.href='game/#1.8.8'">
       <div class="text-overlay">Eaglercraft 1.8.8</div>
     </li>
-    <li class="hot cool" id="minesweeper" onclick="window.location.href = 'game/#minesweeper'"><div class="text-overlay">Minesweeper</div></li>
+    <li class="hot cool" id="minesweeper" onclick="window.location.href = 'game/#minesweeper'">
+      <div class="text-overlay">Minesweeper</div>
+    </li>
     <li class="hot iq" id="block-blast" onclick="window.location.href='game/#block-blast'">
       <div class="text-overlay">Block Blast</div>
     </li>
@@ -900,5 +904,3 @@
 
 
 </html>
-
-

@@ -1,23 +1,9 @@
-//Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAIzv7rOF5LtQmC1AVeQqAjrGHUZnJomFY",
-  authDomain: "track-study-9f2eb.firebaseapp.com",
-  projectId: "track-study-9f2eb",
-  storageBucket: "track-study-9f2eb.firebasestorage.app",
-  messagingSenderId: "461107985386",
-  appId: "1:461107985386:web:15c694a7c946da0a5d1093",
-  databaseURL: "https://track-study-9f2eb-default-rtdb.firebaseio.com"
-};
-
-// Init Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-db.goOnline();
-
+// Firebase was already initialized in configstuff.js
+// const auth = firebase.auth();
+// const db = firebase.database();
 
 firebase.database().ref(".info/connected").on("value", snap => {
-  console.log("DB connected:", snap.val());
+    console.log("DB connected:", snap.val());
 });
 
 let start = false
@@ -105,10 +91,10 @@ var flash = ['escape-the-closet',
     'escape-the-car',
     'riddle-transfer-2']
 
-const other = ['adcap', 'adofai', 'baldi','bison', 'boxing-physics2', 'breaklock', 'burger','DogeMiner','dreader', 'flappy', 'FNAF', 'FNAF2', 'FNAF3', 'FNAF4', 'freezeria', 'friendlyfire', 'fruitninja', 'game-inside','jetpackjoyride', 'knifehit',  'lose95',
-'retro-bowl','sansfight','slope', 'snake', 'soccer-random', 'subway', 'superhot','tacomia', 'tetris', 'touch', 'tunnelrush', 'xx142-b2exe'];
+const other = ['adcap', 'adofai', 'baldi', 'bison', 'boxing-physics2', 'breaklock', 'burger', 'DogeMiner', 'dreader', 'flappy', 'FNAF', 'FNAF2', 'FNAF3', 'FNAF4', 'freezeria', 'friendlyfire', 'fruitninja', 'game-inside', 'jetpackjoyride', 'knifehit', 'lose95',
+    'retro-bowl', 'sansfight', 'slope', 'snake', 'soccer-random', 'subway', 'superhot', 'tacomia', 'tetris', 'touch', 'tunnelrush', 'xx142-b2exe'];
 
-const proxylinks = {"bloxd" : "bloxd.io"};
+const proxylinks = { "bloxd": "bloxd.io" };
 
 
 let isAdmin = false;
@@ -123,6 +109,7 @@ async function smartLoadGame(id) {
         "https://mathlearnhub.github.io/Learning-Tools/listfolders.json"
     ];
 
+    console.log(id);
     // 1️Check Proxy first
     for (const key in proxylinks) {
         if (Object.hasOwnProperty.call(proxylinks, key) && key === id) {
@@ -203,7 +190,7 @@ var iframe = document.createElement('iframe');
 smartLoadGame(fragmentIdentifier).catch(err => {
     console.error("Error loading game:", err);
     const errEl = document.getElementById("loading");
-    if (errEl) { errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)'}
+    if (errEl) { errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)' }
 });
 try {
     iframe.style.border = 'none';
@@ -220,10 +207,10 @@ try {
     const player = document.getElementById('player') || document.body
     player.append(iframe)
 } catch (error) {
-    try{ document.getElementById('player')?.append(iframe) }catch(e){}
+    try { document.getElementById('player')?.append(iframe) } catch (e) { }
     console.error(error)
     const errEl = document.getElementById("loading")
-    if(errEl){ errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)'}
+    if (errEl) { errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)' }
 }
 
 iframe.focus()
@@ -232,84 +219,93 @@ iframe.focus()
 iframe.addEventListener('error', function () {
     console.error('Iframe failed to load:', iframe.src);
     const errEl = document.getElementById('loading');
-    if (errEl) { errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)'}
+    if (errEl) { errEl.textContent = 'Error loading game'; errEl.style.backgroundColor = 'rgba(150,0,0,0.6)' }
 });
 
 console.log("Checking user role...");
 console.log("Testing");
 if (sessionStorage.getItem("freeAccess") === "true") {
-  console.log("Using free acess code how do you get it!")
-  userRole = "free";
+    console.log("Using free acess code how do you get it!")
+    userRole = "free";
 }
 else {
     firebase.auth().onAuthStateChanged(async user => {
-    if (!user) return;
+        if (!user) return;
 
-    const snap = await firebase.database()
-        .ref("users/" + user.uid + "/role")
-        .once("value");
+        const snap = await firebase.database()
+            .ref("users/" + user.uid + "/role")
+            .once("value");
 
-    userRole = snap.val() || "user";
-    console.log("User role:", userRole);
+        userRole = snap.val() || "user";
+        console.log("User role:", userRole);
     });
 }
 
 if (userRole == "admin") {
-  console.log("Admin by UserRole");
-  isAdmin = true
+    console.log("Admin by UserRole");
+    isAdmin = true
 }
 if (sessionStorage.getItem("isAdmin") === "true") {
-  console.log("Admin by sessionStorage");
-  isAdmin = true;
-  userRole = "admin";
+    console.log("Admin by sessionStorage");
+    isAdmin = true;
+    userRole = "admin";
 }
 sessionStorage.setItem("userRole", userRole);
 console.log("Final user role:", userRole);
 
 
 
-function goBack() {
-  if (userRole === "admin") {
-    window.location.href = "../games.html?admin=True";
-  } else if (userRole === "free") {
-    window.location.href = "../games.html?free=True";
-  }
-  if (userRole === "user") {
-    window.location.href = "../games.html?admin=False";
-  }
+const backBtn = document.getElementById("backBtn");
+if (backBtn) {
+    console.log("Found backBtn, attaching listener.");
+    backBtn.addEventListener("click", goBack);
+} else {
+    console.error("Critical: backBtn not found in DOM!");
 }
 
+function goBack() {
+    console.log("goBack triggered. UserRole:", userRole);
+    if (userRole === "admin") {
+        window.location.href = "../games.html?admin=True";
+    } else if (userRole === "free") {
+        window.location.href = "../games.html?free=True";
+    } else if (userRole === "user") {
+        window.location.href = "../games.html?admin=False";
+    } else {
+        console.log("No role matched, defaulting to games.html");
+        window.location.href = "../games.html";
+    }
+}
 document.getElementById("backBtn")?.addEventListener("click", goBack);
-document.getElementById("return")?.addEventListener("click", goBack);
 document.getElementById('open-new')?.addEventListener('click', () => {
-  var win = window.open()
-  var url = iframe.src
-  var iframe = win.document.createElement('iframe')
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.style.border = "none";
-  iframe.src = url
-  win.document.body.appendChild(iframe)
+    var win = window.open()
+    var url = iframe.src
+    var iframe = win.document.createElement('iframe')
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.src = url
+    win.document.body.appendChild(iframe)
 });
 
-document.getElementById('fullscreenBtn')?.addEventListener('click', ()=>{
+document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
     const shell = document.querySelector('.player-shell')
     if (shell) {
         const isImmersive = shell.classList.toggle('immersive')
         // try browser fullscreen as well when entering immersive
         if (isImmersive) {
-            try { iframe.requestFullscreen?.() } catch(e){}
+            try { iframe.requestFullscreen?.() } catch (e) { }
         } else {
-            try { document.exitFullscreen?.() } catch(e){}
+            try { document.exitFullscreen?.() } catch (e) { }
         }
     } else {
         iframe.requestFullscreen?.()
     }
 })
 // Set title from fragment id
-function humanize(id){ if(!id) return 'Game'; return id.replace(/[-_.]/g,' ').replace(/\b\w/g,c=>c.toUpperCase()) }
+function humanize(id) { if (!id) return 'Game'; return id.replace(/[-_.]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) }
 const gameTitleEl = document.getElementById('gameTitle');
 if (gameTitleEl) gameTitleEl.textContent = humanize(fragmentIdentifier)
 // Hide loading once iframe is ready
-iframe.addEventListener('load', ()=>{ document.getElementById('loading')?.remove() })
+iframe.addEventListener('load', () => { document.getElementById('loading')?.remove() })
 

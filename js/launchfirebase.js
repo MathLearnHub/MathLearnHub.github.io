@@ -25,7 +25,7 @@ async function handleLogin(user) {
       email: email,
       role: role,
       created: Date.now(),
-      online : true,
+      online: true,
       timeSpent: 0,
       banned: false
     });
@@ -40,7 +40,7 @@ async function handleLogin(user) {
     await userRef.update({ role: "blocked" });
     window.location.replace("https://www.youtube.com/watch?v=8ELbX5CMomE");
   }
-  
+
   return role;
 }
 
@@ -63,19 +63,7 @@ async function googleLogin() {
 
 const logout = () => auth.signOut();
 
-function onUserChange(cb) {
-  auth.onAuthStateChanged(async user => {
-    if (!user) return cb(null);
-    const snap = await db.ref("users/" + user.uid).once("value");
-    const profile = snap.val();
-    if (profile.role === "blocked") {
-      alert("Your account is blocked.");
-      await auth.signOut();
-      return cb(null);
-    }
-    cb(profile);
-  });
-}
+
 
 // Export functions globally
 window.handleLogin = handleLogin;
