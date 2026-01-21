@@ -302,8 +302,8 @@
   btnPanic?.addEventListener("click",performEscape);
   panicImg?.addEventListener("click",performEscape);
   btnApplyFav?.addEventListener("click",()=>{ changeFavicon(document.getElementById("favicon-select").value||DEFAULT_FAV); alert("Favicon applied"); });
-  btnOpenUrl?.addEventListener("click",()=>openInIframeWindow(urlInput.value.trim()));
-  urlInput?.addEventListener("keydown",e=>{ if(e.key==="Enter") openInIframeWindow(urlInput.value.trim()); });
+  btnOpenUrl?.addEventListener("click",()=>launchIframe(urlInput.value.trim()));
+  urlInput?.addEventListener("keydown",e=>{ if(e.key==="Enter") launchIframe(urlInput.value.trim()); });
   btnSetCustom?.addEventListener("click",()=>{ const v=customInput.value.trim(); if(!v)return alert("Enter a URL"); setCustomTarget(v); alert("Custom target set"); });
   btnClearCustom?.addEventListener("click",()=>{ setCustomTarget(null); customInput.value=""; alert("Custom target cleared"); });
   btnLogSession?.addEventListener("click",()=>{ console.log(sessionStorage); debugOut.textContent=JSON.stringify(Object.fromEntries(Object.entries(sessionStorage)),null,2); });

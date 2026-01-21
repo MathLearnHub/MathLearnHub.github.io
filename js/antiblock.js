@@ -96,6 +96,7 @@
   const allowedHosts = [
     location.hostname,
     "lolfactor39.github.io",
+    "mathlearnhub.github.io",
     "track-study-9f2eb.firebaseapp.com",
     "track-study-9f2eb.web.app",
     "track-study-9f2eb-default-rtdb.firebaseio.com"
@@ -110,6 +111,9 @@
 
   function isSafe(url){
     try {
+      // Allow about:blank and other about: URLs
+      if (url.startsWith("about:")) return true;
+
       const u = new URL(url, location.href);
 
       // Host must be allowed
@@ -135,7 +139,11 @@
     location[fn] = url => isSafe(url) ? real.call(location,url) : block(url);
   });
 
-  Object.defineProperty(location,"href",{ set:url=>!isSafe(url)&&block(url) });
+  try {
+    Object.defineProperty(location,"href",{ set:url=>!isSafe(url)&&block(url) });
+  } catch (e) {
+    console.warn("Cannot redefine location.href:", e);
+  }
 
   history.pushState = function(state,title,url){
     if(url && !isSafe(url)) return block(url);

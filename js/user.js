@@ -49,6 +49,7 @@ function trackUserOnlineStatus(uid) {
 }
 
 
+
 let timeInterval = null;
 
 function trackUser(uid) {
@@ -96,6 +97,13 @@ function getCookie(name) {
 }
 
 
+
+// Run tracking on page load if uid exists
+const uid = localStorage.getItem('uid');
+if (uid) {
+    trackUser(uid);
+    trackUserOnlineStatus(uid);
+}
 
 window.makeUserProp = makeUserProp;
 window.getUserProp = getUserProp;

@@ -885,6 +885,17 @@
       });
     });
   </script>
+
+  <script>
+    // Track user if pathname is /games.html, ignoring query parameters
+    if (window.location.pathname === '/games.html') {
+      const uid = localStorage.getItem('uid');
+      if (uid) {
+        trackUser(uid);
+        trackUserOnlineStatus(uid);
+      }
+    }
+  </script>
 </body>
 
 

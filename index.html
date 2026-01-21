@@ -167,6 +167,13 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script src="js/uttils.js"></script>
+    <script src="js/configstuff.js"></script>
+    <script src="js/user.js"></script>
+
+
+
     <script>
 
 
@@ -176,55 +183,17 @@
         function launchIframe(src) {
             console.log("[launchIframe] Called with src:", src);
 
-            const win = window.open("", "_blank");
+            const win = window.open("about:blank", "_blank");
             if (!win) {
                 console.error("[launchIframe] Popup blocked.");
+                alert("Popup blocked! Please allow popups for this site.");
                 return;
             }
 
-            win.document.open();
-            win.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Loading</title>
-                    <style>
-                        html, body {
-                            margin: 0;
-                            padding: 0;
-                            width: 100%;
-                            height: 100%;
-                            overflow: hidden;
-                            background: black;
-                        }
-                        iframe {
-                            position: fixed;
-                            inset: 0;
-                            width: 100vw;
-                            height: 100vh;
-                            border: none;
-                        }
-                    </style>
-                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-                    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-                    <script src="https://mathlearnhub.github.io/js/user.js"></script>
-                    <script src="https://mathlearnhub.github.io/js/configstuff.js"></script>
-                    <script>
-                        const uid = localStorage.getItem('uid');
-                        if (uid) {
-                            trackUser(uid);
-                            trackUserOnlineStatus(uid);
-                        }
-                    </script>
-                </head>
-                <body>
-                    <iframe src="${src}" allowfullscreen></iframe>
-                </body>
-                </html>
-            `);
+            win.document.write('<iframe src="' + src + '" style="width:100%;height:100%;border:none;" allowfullscreen></iframe>');
             win.document.close();
         }
+
         /* ============================
            AUTH STATE HANDLER (GLOBAL)
            ============================ */
@@ -258,12 +227,20 @@
                 console.log("[openSecret] codeCookie:", codeCookie, "codeFree:", codeFree);
 
                 if (!codeCookie && !codeFree) {
-                    launchIframe("https://mathlearnhub.github.io/theactualindex.html")
+                    document.cookie = "Code=true; path=/; max-age=" + 14 * 24 * 60 * 60; //2 days
+                    var win = window.open()
+                    var url = "./theactualindex.html";
+                    var iframe = win.document.createElement('iframe')
+                    iframe.style.width = "100%";
+                    iframe.style.height = "100%";
+                    iframe.style.border = "none";
+                    iframe.src = url
+                    win.document.body.appendChild(iframe)
                     return;
                 }
 
                 if (codeFree) {
-                    launchIframe("https://mathlearnhub.github.io/games.html?free=True");
+                    launchIframe("./games.html?free=True");
                     return;
                 }
 
@@ -281,11 +258,11 @@
                 const data = snap.val();
                 trackUser(user.uid);
                 trackUserOnlineStatus(user.uid);
-                localStorage.setItem('uid', user.uid);
 
                 if (!role) role = data.role;
                 if (role === "blocked") {window.location.href = "google.com"}
-                const src = role === "admin" ? "https://mathlearnhub.github.io/games.html?admin=True" : "https://mathlearnhub.github.io/games.html?admin=False";
+
+                const src = role === "admin" ? "./games.html?admin=True" : "./games.html?admin=False";
                 launchIframe(src);
 
             } catch (err) {
@@ -317,10 +294,11 @@
             "Factors": "Numbers that multiply to produce another number.",
             "Multiples": "Results of multiplying a number by an integer.",
             "Exponents": "How many times a base is multiplied by itself.",
-            "Square Roots": "A number that, when multiplied by itself, gives the original number.",
-            "Equations": "A statement showing two expressions are equal.",
-            "Inequalities": "A comparison using symbols like <, >, ≤, ≥.",
-            "Functions": "A rule where each input has exactly one output.",
+            "Square Roots": `A number that, when multiplied by itself,
+    gives the original number.`,
+            "Equations": `A statement showing two expressions are equal.`,
+            "Inequalities": `A comparison using symbols like <, >, ≤, ≥.`,
+            "Functions": `A rule where each input has exactly one output.`,
             "Graphing": "Visual representation of mathematical relationships.",
             "Slope": "Steepness of a line (rise over run).",
             "Angles": "The space formed by two rays from a common point.",
@@ -401,7 +379,7 @@
             const result = document.getElementById("result");
             if (ans === currentA * currentB) { result.innerText = "Correct!"; result.style.color = "green"; }
             else {
-                result.innerText = "Wrong. The correct answer was ${currentA * currentB}. Try again!";
+                result.innerText = `Wrong. The correct answer was ${currentA * currentB}. Try again!`;
                 result.style.color = "red";
             }
             document.getElementById("answer").value = "";
