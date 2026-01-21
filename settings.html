@@ -346,6 +346,9 @@ if(isAdmin){
 }else{
   navLeft.appendChild(createNavItem('Gamer HUBS','./games.html'));
 }
+let uids = sessionStorage.getItem('uid');
+window.trackUser(uids);
+window.trackUserOnlineStatus(uids);
 </script>
 
 </body>
