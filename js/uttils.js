@@ -95,6 +95,21 @@ function onUserChange(cb) {
   });
 }
 
+window.getPeopleCount = function() {
+  const onlineRef = db.ref("users").orderByChild("online").equalTo(true);
+  onlineRef.on("value", snap => {
+    const count = snap.numChildren();
+    const onlineEl = document.getElementById("online-users");
+    if (onlineEl) onlineEl.textContent = `USERS ONLINE: ${count}${count === 1 ? " user" : " users"}`;
+  }, err => {
+    const onlineEl = document.getElementById("online-users");
+    if (onlineEl) onlineEl.textContent = `USERS ONLINE: 0`;
+  });
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.getPeopleCount();
+});
 
 
 const defaultUserSchema = { "created": () => Date.now(), "email": "", "icon": "", "online": false, "role": "", "timeSpent": 0, "banned": false, "name": "" };
