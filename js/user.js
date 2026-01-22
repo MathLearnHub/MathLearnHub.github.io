@@ -7,28 +7,36 @@
 // auth and db are already defined globally in configstuff.js
 
 
-db.ref(".info/connected").on("value", snap => {
-  console.log("db connected:", snap.val());
-});
 
+if (typeof db !== 'undefined') {
+  db.ref(".info/connected").on("value", snap => {
+    console.log("db connected:", snap.val());
+  });
+} else {
+  console.error("User.js: db is not defined! Make sure configstuff.js is loaded first.");
+}
 
 function makeUserProp(uid, key, value) {
+  if (!db) return console.error("DB not init");
   return db.ref(`users/${uid}/${key}`).set(value);
 }
 
 /* Read a user property */
 function getUserProp(uid, key) {
+  if (!db) return Promise.reject("DB not init");
   return db.ref(`users/${uid}/${key}`).once("value")
     .then(snap => snap.exists() ? snap.val() : null);
 }
 
 /* Edit an existing property */
 function editUserProp(uid, key, value) {
+  if (!db) return console.error("DB not init");
   return db.ref(`users/${uid}`).update({ [key]: value });
 }
 
 /* Delete a property */
 function deleteUserProp(uid, key) {
+  if (!db) return console.error("DB not init");
   return db.ref(`users/${uid}/${key}`).remove();
 }
 
@@ -37,6 +45,10 @@ function deleteUserProp(uid, key) {
 
 function trackUserOnlineStatus(uid) {
   if (!uid) return;
+  if (typeof db === 'undefined' || !db) {
+    console.error("trackUserOnlineStatus: db is not defined!");
+    return;
+  }
   const userRef = db.ref(`users/${uid}`);
   const connectedRef = db.ref(".info/connected");
 
@@ -61,13 +73,23 @@ function trackUserOnlineStatus(uid) {
 let timeInterval = null;
 
 function trackUser(uid) {
-  if (!uid) return;
+  if (!uid) {
+    console.warn("trackUser: No UID provided");
+    return;
+  }
+  if (typeof db === 'undefined' || !db) {
+    console.error("trackUser: db is not defined!");
+    return;
+  }
+
+  console.log("Starting trackUser for:", uid);
 
   const userRef = db.ref(`users/${uid}`);
-  const sessionStart = Date.now();
+  // sessionStart unused?
+  // const sessionStart = Date.now();
 
   // Mark online
-  userRef.update({ online: true });
+  userRef.update({ online: true }).catch(e => console.error("trackUser update failed:", e));
 
   // Clean disconnect handler
   userRef.onDisconnect().update({ online: false });
@@ -76,9 +98,13 @@ function trackUser(uid) {
   if (timeInterval) clearInterval(timeInterval);
 
   timeInterval = setInterval(() => {
+    if (typeof firebase === 'undefined') {
+      console.error("trackUser: firebase global is missing!");
+      return;
+    }
     userRef.update({
       timeSpent: firebase.database.ServerValue.increment(10)
-    }).catch(console.error);
+    }).catch(err => console.error("trackUser inc failed:", err));
   }, 10000);
 
   // Stop timer on tab close
@@ -109,9 +135,13 @@ function getCookie(name) {
 // Run tracking on page load if uid exists
 const uid = sessionStorage.getItem('uid') || localStorage.getItem('uid');
 if (uid) {
+  console.log("Auto-starting tracking for:", uid);
   trackUser(uid);
   trackUserOnlineStatus(uid);
+} else {
+  console.log("No UID found in storage, skipping auto-track.");
 }
+
 
 function onUserChange(callback) {
   firebase.auth().onAuthStateChanged(user => {
