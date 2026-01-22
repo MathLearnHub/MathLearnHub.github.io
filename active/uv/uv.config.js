@@ -16,7 +16,7 @@
 //  ⠀⠀⠀⠀⠀⠀⠐⢫⠏⢸⠁⠀⠈⢳⠘⢧⣙⢦⠀⠀⠀
 
 self.__uv$config = {
-  prefix: "/active/uv/service/",
+  prefix: "/active/uv/assets/",
   encodeUrl: Ultraviolet.codec.xor.encode,
   decodeUrl: Ultraviolet.codec.xor.decode,
   handler: "/active/uv/uv.handler.js",

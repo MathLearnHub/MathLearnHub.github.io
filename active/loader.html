@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,22 +8,45 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes scan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
         }
+
         .scanner-line {
             height: 4px;
             background: linear-gradient(to bottom, transparent, #3b82f6, transparent);
             box-shadow: 0 0 20px #3b82f6;
             animation: scan 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
-        #terminal::-webkit-scrollbar { width: 4px; }
-        #terminal::-webkit-scrollbar-thumb { background: #1e3a8a; border-radius: 10px; }
-        .glitch-text { text-shadow: 0 0 10px rgba(59, 130, 246, 0.9); }
-        .progress-bar-fill { transition: width 0.2s ease-out; }
-        #panic-screen { display: none; }
+
+        #terminal::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #terminal::-webkit-scrollbar-thumb {
+            background: #1e3a8a;
+            border-radius: 10px;
+        }
+
+        .glitch-text {
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
+        }
+
+        .progress-bar-fill {
+            transition: width 0.2s ease-out;
+        }
+
+        #panic-screen {
+            display: none;
+        }
     </style>
 </head>
+
 <body class="bg-[#020617] text-blue-400 font-mono overflow-hidden h-screen flex flex-col">
 
     <!-- Panic Overlay (Triggered by Esc) -->
@@ -31,26 +55,36 @@
     </div>
 
     <!-- Stealth Boot Screen -->
-    <div id="boot-screen" class="fixed inset-0 z-50 bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
-        <div class="relative w-64 h-64 border-2 border-blue-900/30 mb-8 overflow-hidden rounded-3xl shadow-[0_0_60px_rgba(59,130,246,0.15)]">
+    <div id="boot-screen"
+        class="fixed inset-0 z-50 bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
+        <div
+            class="relative w-64 h-64 border-2 border-blue-900/30 mb-8 overflow-hidden rounded-3xl shadow-[0_0_60px_rgba(59,130,246,0.15)]">
             <div class="scanner-line absolute w-full top-0 z-10"></div>
-            <div class="absolute inset-0 bg-[radial-gradient(circle,#1e293b_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
-            
+            <div
+                class="absolute inset-0 bg-[radial-gradient(circle,#1e293b_1px,transparent_1px)] bg-[size:24px_24px] opacity-40">
+            </div>
+
             <div id="progress-circle" class="absolute inset-0 flex flex-col items-center justify-center z-20">
                 <span class="text-4xl font-black glitch-text tracking-tighter text-white">0%</span>
                 <div class="w-40 h-1.5 bg-blue-950/50 mt-4 rounded-full overflow-hidden">
-                    <div id="bar-inner" class="progress-bar-fill h-full bg-blue-500 w-0 shadow-[0_0_15px_#3b82f6]"></div>
+                    <div id="bar-inner" class="progress-bar-fill h-full bg-blue-500 w-0 shadow-[0_0_15px_#3b82f6]">
+                    </div>
                 </div>
-                <span id="speed-indicator" class="text-[8px] text-blue-300 mt-4 uppercase tracking-[0.4em] font-bold">Turbo-Stream Active</span>
+                <span id="speed-indicator"
+                    class="text-[8px] text-blue-300 mt-4 uppercase tracking-[0.4em] font-bold">Turbo-Stream
+                    Active</span>
             </div>
         </div>
-        
+
         <div id="branding-area" class="space-y-1">
-            <h1 class="text-xl tracking-[0.2em] uppercase font-black text-white">Encrypted <span class="text-blue-500">Node</span></h1>
-            <p id="status-text" class="text-blue-700 animate-pulse text-[10px] font-bold tracking-widest uppercase">Initializing High-Speed Ingress...</p>
+            <h1 class="text-xl tracking-[0.2em] uppercase font-black text-white">Encrypted <span
+                    class="text-blue-500">Node</span></h1>
+            <p id="status-text" class="text-blue-700 animate-pulse text-[10px] font-bold tracking-widest uppercase">
+                Initializing High-Speed Ingress...</p>
         </div>
-        
-        <div id="terminal" class="mt-8 w-full max-w-2xl h-36 overflow-y-auto text-[9px] text-left bg-black/60 backdrop-blur-xl p-4 border border-blue-900/20 rounded-2xl">
+
+        <div id="terminal"
+            class="mt-8 w-full max-w-2xl h-36 overflow-y-auto text-[9px] text-left bg-black/60 backdrop-blur-xl p-4 border border-blue-900/20 rounded-2xl">
             <div class="text-blue-400 font-bold mb-1">>> SEC-OPS v3.8: Protocol Resilient Mesh</div>
             <div class="text-blue-600/60">-- Fragmentation logic adjusted for Bloxd-tier targets.</div>
         </div>
@@ -59,9 +93,11 @@
     <!-- Container for the Mirrored App -->
     <div id="mirror-container" class="hidden fixed inset-0 bg-black">
         <!-- Removed allow-same-origin to prevent sandbox escape warnings while maintaining script functionality -->
-        <iframe id="mirror-frame" class="w-full h-full border-none" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads"></iframe>
+        <iframe id="mirror-frame" class="w-full h-full border-none"
+            sandbox="allow-scripts allow-forms allow-popups allow-modals allow-downloads"></iframe>
     </div>
 
+    <script src="../js/settings-loader.js"></script>
     <script>
         const UI = {
             boot: document.getElementById('boot-screen'),
@@ -76,10 +112,12 @@
             panic: document.getElementById('panic-screen')
         };
 
+        // Sync with global settings for Panic
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                UI.panic.style.display = 'block';
-                document.title = "Google Docs";
+            const storedKey = (localStorage.getItem("panicKey") || "`").toLowerCase();
+            if (e.key.toLowerCase() === storedKey) {
+                const panicUrl = localStorage.getItem("panicUrl") || "https://classroom.google.com";
+                window.location.href = panicUrl;
             }
         });
 
@@ -126,9 +164,10 @@
 
             async start() {
                 try {
-                    log(`Secure Link Established: ${btoa(this.targetUrl.hostname).substring(0,8)}`, 'SUCCESS');
-                    window.history.replaceState({}, '', window.location.pathname + '#/drive/v2/files/shared-with-me');
-                    
+                    log(`Secure Link Established: ${btoa(this.targetUrl.hostname).substring(0, 8)}`, 'SUCCESS');
+                    // Hide the URL hash to avoid detection
+                    window.history.replaceState({}, '', window.location.pathname);
+
                     let response;
                     try {
                         response = await this.fetchWithFallback(this.targetUrl.href);
@@ -143,9 +182,9 @@
                         this.directInject();
                         return;
                     }
-                    
+
                     let html = await response.text();
-                    
+
                     // Improved regex to catch more dynamic game assets
                     const assetRegex = /(?:src|href|url|poster|data-src|data-main|data-config|import)\s*[:=]\s*['"]?([^'"\s>]+)['"]?/gi;
                     const assetsToFetch = new Set();
@@ -156,12 +195,12 @@
                         try {
                             const absoluteUrl = new URL(rawPath, this.targetUrl.href).href;
                             assetsToFetch.add(absoluteUrl);
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     const assetList = Array.from(assetsToFetch);
                     this.totalAssets = assetList.length;
-                    
+
                     if (this.totalAssets > 0) {
                         log(`Streaming ${this.totalAssets} data fragments...`);
                         const chunks = [];
@@ -186,7 +225,7 @@
                     const response = await this.fetchWithFallback(url);
                     const blob = await response.blob();
                     this.assetMap.set(url, URL.createObjectURL(blob));
-                } catch (e) {} finally {
+                } catch (e) { } finally {
                     this.processedAssets++;
                     const percent = Math.floor((this.processedAssets / this.totalAssets) * 100);
                     UI.progress.textContent = `${percent}%`;
@@ -234,7 +273,7 @@
 
                 const blob = new Blob([runtimeScript + html], { type: 'text/html' });
                 const mainUrl = URL.createObjectURL(blob);
-                
+
                 setTimeout(() => {
                     UI.boot.style.display = 'none';
                     UI.container.classList.remove('hidden');
@@ -245,7 +284,16 @@
 
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const url = urlParams.get('url');
+            // Support 'q' (base64) or 'url' (old plain)
+            let url = urlParams.get('url');
+            const q = urlParams.get('q');
+
+            if (q) {
+                try {
+                    url = atob(q);
+                } catch (e) { console.error("Bad base64", e); }
+            }
+
             if (url) {
                 new MirrorEngine(url).start();
             } else {
@@ -254,4 +302,5 @@
         };
     </script>
 </body>
+
 </html>

@@ -15,6 +15,7 @@
             background: linear-gradient(to bottom right, #f7f7f7, #e0e6f0);
             color: #333;
         }
+
         .no-cursor-pointer {
             cursor: default;
         }
@@ -147,11 +148,12 @@
         nav button:hover {
             background: #2ea043;
         }
-            margin-left: 20px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: background 0.2s;
-            display: inline-block;
+
+        margin-left: 20px;
+        padding: 5px 10px;
+        border-radius: 5px;
+        transition: background 0.2s;
+        display: inline-block;
         }
 
         #nav-right button:hover,
@@ -159,6 +161,7 @@
             background: rgba(255, 255, 255, 0.2);
         }
     </style>
+    <script src="js/settings-loader.js"></script>
 </head>
 
 <body>
@@ -168,17 +171,19 @@
 
         </div>
         <div id="nav-right">
-          <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
-          
-          <img src="images/panic.png" alt="Panic Button" id="panic-button"
-            onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
-          <img src="images/chat.png" alt="Chat" id="chat-button"
-            onclick="window.location.href='https://lolfactor39.github.io/chat/'" title="Chat with firends like discord!">
-          <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'"
-            title="Home">Settings</h3>
-          <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
-            About Me
-          </h3>
+            <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List
+                View</button>
+
+            <img src="images/panic.png" alt="Panic Button" id="panic-button"
+                onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
+            <img src="images/chat.png" alt="Chat" id="chat-button"
+                onclick="window.location.href='https://lolfactor39.github.io/chat/'"
+                title="Chat with firends like discord!">
+            <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'" title="Home">
+                Settings</h3>
+            <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
+                About Me
+            </h3>
         </div>
     </nav>
 
@@ -323,7 +328,26 @@
     </ul>
     <script>
         function openProxy(url) {
-            window.location.href = 'active/loader.html?url=' + url;
+            // Encode the URL to hide it from simple filters
+            const encoded = btoa(url);
+            const target = 'active/loader.html?q=' + encoded;
+
+            // Use the settings module to open in an about:blank cloaked window
+            if (window.settings && window.settings.openAboutBlank) {
+                window.settings.openAboutBlank(target);
+            } else {
+                // Fallback if settings didn't load for some reason
+                const win = window.open();
+                win.document.body.style.margin = '0';
+                win.document.body.style.height = '100vh';
+                const iframe = win.document.createElement('iframe');
+                iframe.style.border = 'none';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.margin = '0';
+                iframe.src = target;
+                win.document.body.appendChild(iframe);
+            }
         }
 
         // Search Functionality
