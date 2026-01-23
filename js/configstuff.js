@@ -141,7 +141,7 @@ async function googleLogin() {
     return;
   }
 
-  sessionStorage.setItem("uid", uid);
+  localStorage.setItem("uid", uid);
   window.trackUserOnlineStatus(uid);
   window.trackUser(uid);
   console.log("Have it ", role);
