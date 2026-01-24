@@ -780,6 +780,7 @@
                 <div id="channelList"></div>
 
                 <div class="channel-category">Social</div>
+                <div id="friendRequestsList" style="padding: 0 8px;"></div>
                 <div id="friendsList" style="padding: 8px;">
                     <div style="color: #72767d; font-size: 12px; text-align: center;">No friends yet</div>
                 </div>
@@ -1079,6 +1080,32 @@
         </div>
     </div>
 
+    <div class="modal" id="userProfileModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div id="profileHeader" style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+                <div id="profileAvatar" style="width: 80px; height: 80px;"></div>
+                <div>
+                    <h2 id="profileName">User Name</h2>
+                    <div id="profileRole" style="color: #b9bbbe; font-size: 14px; margin-top: 4px;">member</div>
+                </div>
+            </div>
+            <div class="admin-section">
+                <div class="admin-section-title">Bio</div>
+                <p id="profileBio" style="color: #dcddde; font-size: 14px; line-height: 1.5; white-space: pre-wrap;">No
+                    bio yet.</p>
+            </div>
+            <div class="admin-section">
+                <div class="admin-section-title">Friends</div>
+                <div id="profileFriendsList" class="user-list" style="max-height: 200px; overflow-y: auto;">
+                    <div style="color: #72767d; text-align: center; padding: 10px;">Loading friends...</div>
+                </div>
+            </div>
+            <div class="modal-footer" id="profileModalFooter">
+                <button class="btn btn-secondary" onclick="hideModal('userProfileModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
 
         let currentUser = null;
@@ -1089,6 +1116,7 @@
         let messagesListener = null;
         let isBanned = false;
         let pendingAttachment = null; // Global variable for the selected file
+        let myFriends = {}; // Cache of current user's friends
 
         // Initialize Firebase
 
@@ -1170,7 +1198,7 @@
                 firebase.database().ref('users/' + currentUser.uid).once('value', (snapshot) => {
                     const userData = snapshot.val();
                     if (userData) {
-                        userRole = userData.role || 'member';
+                        userRole = (userData.role || 'member').toLowerCase();
                         updateUserDisplay(userData.name || 'User');
                         applyUserPreferences(userData.preferences);
                     } else {
@@ -1184,6 +1212,7 @@
                     }
                     loadServers();
                     loadFriends();
+                    loadFriendRequests();
                     logActivity('joined', 'User joined the server');
                 });
             } else {
@@ -1207,7 +1236,7 @@
             if (userRole === 'admin') {
                 roleEl.innerHTML = '<span class="admin-badge">ADMIN</span>';
             } else {
-                roleEl.textContent = userRole;
+                roleEl.textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
             }
 
             const avatarEl = document.getElementById('userAvatar');
@@ -1304,18 +1333,23 @@
 
             countEl.textContent = eligibleUsers.length;
 
-            container.innerHTML = eligibleUsers.sort((a, b) => (a.online === b.online ? 0 : a.online ? -1 : 1)).map(user => `
-                <div class="member-item" onclick="addFriendPromptWithId('${user.uid}', '${user.name || 'User'}')">
+            container.innerHTML = eligibleUsers.sort((a, b) => (a.online === b.online ? 0 : a.online ? -1 : 1)).map(user => {
+                const isFriend = myFriends[user.uid];
+                return `
+                <div class="member-item" onclick="showUserProfile('${user.uid}')">
                     <div style="position: relative;">
                         ${createAvatarHTML(user.icon || (user.uid === currentUser.uid ? currentUser.photoURL : ''), user.name)}
                         <div class="member-status ${user.online ? 'online' : ''}" style="position: absolute; bottom: -2px; right: -2px;"></div>
                     </div>
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.name || 'User'}</div>
+                        <div style="font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${user.name || 'User'} ${isFriend ? '👤' : ''}
+                        </div>
                         <div style="font-size: 11px; color: #b9bbbe;">${user.uid === ownerId ? 'Owner' : (serverAdmins[user.uid] || user.role === 'admin' ? 'Admin' : 'Member')}</div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function addFriendPromptWithId(uid, name) {
@@ -1383,6 +1417,7 @@
         function switchChannel(channelId) {
             currentChannel = channelId;
             document.getElementById('channelName').textContent = channelId;
+            document.getElementById('channelIcon').textContent = '#';
 
             // Update active class in sidebar
             document.querySelectorAll('.channel').forEach(el => {
@@ -1406,10 +1441,13 @@
             if (isGlobalAdmin || isGCOwner || isGCAdmin) {
                 controls.innerHTML = `
                     ${isGlobalAdmin ? '<button class="btn btn-primary" onclick="showAdminPanel()">🛡️ Global Admin</button>' : ''}
-                    ${(isGCOwner || isGCAdmin || isGlobalAdmin) ? '<button class="btn btn-primary" onclick="showManageServerModal()">⚙️ Manage GC</button>' : ''}
-                    <button class="btn btn-secondary" onclick="toggleLock()">🔒 Lock</button>
-                    ${(isGlobalAdmin || isGCOwner) ? '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>' : ''}
+                    ${(currentServer !== '__dms__' && (isGCOwner || isGCAdmin || isGlobalAdmin)) ? '<button class="btn btn-primary" onclick="showManageServerModal()">⚙️ Manage GC</button>' : ''}
+                    ${currentServer !== '__dms__' ? '<button class="btn btn-secondary" onclick="toggleLock()">🔒 Lock</button>' : ''}
+                    ${(isGlobalAdmin || isGCOwner || currentServer === '__dms__') ? '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>' : ''}
+                    ${(currentServer !== '__dms__' && (isGlobalAdmin || isGCOwner)) ? (currentServer !== 'main' ? `<button class="btn btn-danger" onclick="deleteServer('${currentServer}')" style="margin-left: 8px;">🗑️ Delete GC</button>` : '') : ''}
                 `;
+            } else if (currentServer === '__dms__') {
+                controls.innerHTML = '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>';
             } else {
                 controls.innerHTML = '';
             }
@@ -1656,6 +1694,38 @@
 
             hideModal('createServerModal');
             document.getElementById('newServerName').value = '';
+        }
+
+        function deleteServer(serverId) {
+            if (serverId === 'main') {
+                alert("Cannot delete the main server!");
+                return;
+            }
+
+            const isGlobalAdmin = userRole === 'admin';
+            const isOwner = currentServerData && currentServerData.owner === currentUser.uid;
+
+            if (!isGlobalAdmin && !isOwner) {
+                alert("Only the GC owner or a global Admin can delete this group chat.");
+                return;
+            }
+
+            if (confirm(`Are you sure you want to PERMANENTLY delete the group chat "${currentServerData.name || serverId}"? This will remove all messages and members.`)) {
+                if (firebase.apps.length > 0) {
+                    // Remove server data
+                    firebase.database().ref('servers/' + serverId).remove().then(() => {
+                        // Remove all chat messages for this server
+                        firebase.database().ref('chat/' + serverId).remove();
+
+                        logActivity('delete_server', `Deleted server: ${currentServerData.name || serverId}`);
+                        alert("Group chat deleted successfully.");
+                        switchServer('main'); // Go back to main server
+                    }).catch(error => {
+                        console.error("Error deleting server:", error);
+                        alert("Failed to delete server: " + error.message);
+                    });
+                }
+            }
         }
 
         function showJoinServerModal() {
@@ -1927,15 +1997,100 @@
             });
         }
 
-        function addFriend(uid, name) {
+        async function addFriend(uid, name) {
             if (uid === currentUser.uid) return;
             if (firebase.apps.length > 0) {
-                firebase.database().ref(`friends/${currentUser.uid}/${uid}`).set({
-                    name: name,
-                    addedAt: Date.now()
-                }).then(() => {
-                    alert('Friend added!');
+                // Check if already friends
+                const snapshot = await firebase.database().ref(`friends/${currentUser.uid}/${uid}`).once('value');
+                if (snapshot.exists()) {
+                    alert('You are already friends with this user!');
+                    return;
+                }
+
+                const isAdmin = userRole === 'admin';
+                if (isAdmin) {
+                    // Force mutual friendship
+                    const myName = document.getElementById('userName').textContent;
+                    const updates = {};
+                    updates[`friends/${currentUser.uid}/${uid}`] = { name: name, addedAt: Date.now() };
+                    updates[`friends/${uid}/${currentUser.uid}`] = { name: myName, addedAt: Date.now() };
+
+                    firebase.database().ref().update(updates).then(() => {
+                        alert(`Admin Force Friend: You and ${name} are now mutual friends!`);
+                        loadFriends();
+                    });
+                } else {
+                    // Check if request already sent
+                    const reqSnap = await firebase.database().ref(`friendRequests/${uid}/${currentUser.uid}`).once('value');
+                    if (reqSnap.exists()) {
+                        alert('Friend request already pending.');
+                        return;
+                    }
+
+                    // Send friend request
+                    const myName = document.getElementById('userName').textContent;
+                    firebase.database().ref(`friendRequests/${uid}/${currentUser.uid}`).set({
+                        name: myName,
+                        timestamp: Date.now()
+                    }).then(() => {
+                        alert('Friend request sent!');
+                    });
+                }
+            }
+        }
+
+        function loadFriendRequests() {
+            if (firebase.apps.length > 0 && currentUser) {
+                firebase.database().ref(`friendRequests/${currentUser.uid}`).on('value', (snapshot) => {
+                    const requests = snapshot.val() || {};
+                    renderFriendRequests(requests);
+                });
+            }
+        }
+
+        function renderFriendRequests(requests) {
+            const container = document.getElementById('friendRequestsList');
+            const requestArray = Object.entries(requests).map(([uid, data]) => ({ uid, ...data }));
+
+            if (requestArray.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="font-size: 12px; color: #5865f2; font-weight: 600; text-transform: uppercase; padding: 4px 8px;">Pending Requests</div>
+                ` + requestArray.map(req => `
+                <div class="member-item" style="padding: 4px 8px; background: rgba(88, 101, 242, 0.1); border-radius: 4px; margin-bottom: 4px;">
+                    <div style="flex: 1; font-size: 13px;">${req.name}</div>
+                    <div style="display: flex; gap: 4px;">
+                        <button class="btn btn-primary" style="padding: 2px 6px; font-size: 12px;" onclick="acceptFriendRequest('${req.uid}', '${req.name}')">✅</button>
+                        <button class="btn btn-danger" style="padding: 2px 6px; font-size: 12px;" onclick="rejectFriendRequest('${req.uid}')">❌</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function acceptFriendRequest(uid, name) {
+            if (firebase.apps.length > 0) {
+                const myName = document.getElementById('userName').textContent;
+                const updates = {};
+                // Mutual friendship
+                updates[`friends/${currentUser.uid}/${uid}`] = { name: name, addedAt: Date.now() };
+                updates[`friends/${uid}/${currentUser.uid}`] = { name: myName, addedAt: Date.now() };
+                // Remove request
+                updates[`friendRequests/${currentUser.uid}/${uid}`] = null;
+
+                firebase.database().ref().update(updates).then(() => {
+                    alert(`Accepted! You and ${name} are now friends.`);
                     loadFriends();
+                });
+            }
+        }
+
+        function rejectFriendRequest(uid) {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(`friendRequests/${currentUser.uid}/${uid}`).remove().then(() => {
+                    alert('Friend request rejected.');
                 });
             }
         }
@@ -1943,8 +2098,10 @@
         function loadFriends() {
             if (firebase.apps.length > 0 && currentUser) {
                 firebase.database().ref(`friends/${currentUser.uid}`).on('value', (snapshot) => {
-                    const friends = snapshot.val() || {};
-                    renderFriends(friends);
+                    myFriends = snapshot.val() || {};
+                    renderFriends(myFriends);
+                    // Refresh member list if visible to update friend icons
+                    if (currentServerData) loadServerMembers();
                 });
             }
         }
@@ -1959,25 +2116,40 @@
             }
 
             container.innerHTML = friendArray.map(friend => `
-                <div class="channel" onclick="switchChannel('Social talk')" data-channel="Social talk" style="font-size: 14px; padding: 4px 8px;">
+                <div class="channel" onclick="switchDM('${friend.uid}', '${friend.name}')" data-dm="${friend.uid}" style="font-size: 14px; padding: 4px 8px;">
                     ${createAvatarHTML(friend.icon, friend.name, '20px')}
                     <span>${friend.name}</span>
                 </div>
             `).join('');
         }
 
+        function getDMChannelId(uid1, uid2) {
+            return [uid1, uid2].sort().join('_');
+        }
+
+        function switchDM(friendUid, friendName) {
+            currentServer = '__dms__';
+            currentChannel = getDMChannelId(currentUser.uid, friendUid);
+            currentServerData = null; // Reset server-specific data for DMs
+
+            document.getElementById('channelName').textContent = 'DM: ' + friendName;
+            document.getElementById('channelIcon').textContent = '👤';
+
+            // Update active state in sidebar
+            document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.server-icon').forEach(el => el.classList.remove('active'));
+
+            const dmEl = document.querySelector(`[data-dm="${friendUid}"]`);
+            if (dmEl) dmEl.classList.add('active');
+
+            updateChatControls();
+            loadMessages();
+        }
+
         function addFriendPrompt() {
             const uid = prompt("Enter the User ID of the person you want to add:");
             if (!uid) return;
-
-            firebase.database().ref(`users/${uid}`).once('value', (snap) => {
-                const data = snap.val();
-                if (!data) {
-                    alert("User not found!");
-                } else {
-                    addFriend(uid, data.name || 'User');
-                }
-            });
+            showUserProfile(uid);
         }
 
         function switchSettingTab(tabId) {
@@ -2078,6 +2250,73 @@
                 document.head.appendChild(styleEl);
             }
             styleEl.innerHTML = prefs.showTimestamps === false ? '.message-time { display: none !important; }' : '';
+        }
+
+        function showUserProfile(uid) {
+            if (!currentUser) return;
+
+            // Show modal and loading state
+            document.getElementById('userProfileModal').classList.add('show');
+            document.getElementById('profileName').textContent = 'Loading...';
+            document.getElementById('profileAvatar').innerHTML = '';
+            document.getElementById('profileFriendsList').innerHTML = '<div style="color: #72767d; text-align: center; padding: 10px;">Loading friends...</div>';
+
+            firebase.database().ref(`users/${uid}`).once('value', async (snap) => {
+                const data = snap.val();
+                if (!data) {
+                    alert('User not found.');
+                    hideModal('userProfileModal');
+                    return;
+                }
+
+                // Set basic info
+                document.getElementById('profileName').textContent = data.name || 'User';
+                document.getElementById('profileAvatar').innerHTML = createAvatarHTML(data.icon, data.name, '80px');
+                document.getElementById('profileRole').textContent = data.role || 'member';
+                document.getElementById('profileBio').textContent = data.bio || 'No bio yet.';
+
+                // Load their friends
+                firebase.database().ref(`friends/${uid}`).once('value', (friendSnap) => {
+                    const friends = friendSnap.val() || {};
+                    const friendArray = Object.entries(friends);
+
+                    if (friendArray.length === 0) {
+                        document.getElementById('profileFriendsList').innerHTML = '<div style="color: #72767d; text-align: center; padding: 10px;">No friends yet</div>';
+                    } else {
+                        document.getElementById('profileFriendsList').innerHTML = friendArray.map(([fUid, fData]) => `
+                            <div class="user-item" style="padding: 8px;">
+                                <div class="user-item-info">
+                                    <div class="user-item-avatar" style="width: 24px; height: 24px;">${fData.name ? fData.name[0].toUpperCase() : 'U'}</div>
+                                    <div style="font-size: 13px;">${fData.name}</div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                });
+
+                // Set action buttons in footer
+                const footer = document.getElementById('profileModalFooter');
+                const isFriend = myFriends[uid];
+                const isAdmin = userRole === 'admin';
+
+                let actionHtml = `<button class="btn btn-secondary" onclick="hideModal('userProfileModal')">Close</button>`;
+
+                if (uid !== currentUser.uid) {
+                    if (isFriend) {
+                        actionHtml = `
+                            <button class="btn btn-primary" onclick="hideModal('userProfileModal'); switchDM('${uid}', '${data.name}')">Message</button>
+                            <button class="btn btn-secondary" onclick="hideModal('userProfileModal')">Close</button>
+                        `;
+                    } else {
+                        actionHtml = `
+                            <button class="btn btn-primary" onclick="addFriend('${uid}', '${data.name || 'User'}'); hideModal('userProfileModal');">${isAdmin ? 'Force Friend' : 'Add Friend'}</button>
+                            <button class="btn btn-secondary" onclick="hideModal('userProfileModal')">Close</button>
+                        `;
+                    }
+                }
+
+                footer.innerHTML = actionHtml;
+            });
         }
 
         function deleteMyAccountSelf() {
