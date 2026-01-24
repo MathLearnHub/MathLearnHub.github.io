@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
     <script src="js/configstuff.js"></script>
     <script src="js/user.js"></script>
     <script src="js/settings-loader.js"></script>
@@ -681,6 +681,75 @@
             color: #b9bbbe;
             margin-bottom: 24px;
         }
+
+        .attachment-preview {
+            display: none;
+            background: #2f3136;
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            border-bottom: 1px solid #202225;
+            margin-bottom: -1px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .attachment-preview.show {
+            display: flex;
+        }
+
+        .preview-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #36393f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .preview-name {
+            font-size: 14px;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .preview-size {
+            font-size: 12px;
+            color: #b9bbbe;
+        }
+
+        .remove-attachment {
+            cursor: pointer;
+            color: #ed4245;
+            font-size: 20px;
+            padding: 4px;
+            transition: transform 0.2s;
+        }
+
+        .remove-attachment:hover {
+            transform: scale(1.2);
+        }
+
+        .message-file-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            margin-top: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-width: fit-content;
+        }
     </style>
 </head>
 
@@ -743,6 +812,7 @@
             <div class="messages" id="messages"></div>
             <div class="input-area" id="inputArea">
                 <div class="input-container">
+                    <div class="attachment-preview" id="attachmentPreview"></div>
                     <textarea class="message-input" id="messageInput" placeholder="Message #general" maxlength="2000"
                         rows="1"></textarea>
                     <div class="input-footer">
@@ -1018,6 +1088,7 @@
         let currentServerData = null; // New: Global variable for current server info
         let messagesListener = null;
         let isBanned = false;
+        let pendingAttachment = null; // Global variable for the selected file
 
         // Initialize Firebase
 
@@ -1410,9 +1481,14 @@
                         </div>
                         ${msg.text ? `<div class="message-text">${parseMessageText(msg.text)}</div>` : ''}
                         ${msg.file ? `
-                            <a href="${msg.file.url}" target="_blank" class="message-file" style="text-decoration: none; color: inherit;">
-                                📎 ${escapeHtml(msg.file.name)} (${Math.round(msg.file.size / 1024)}KB)
-                            </a>
+                            <div class="message-file-wrapper">
+                                ${msg.file.type && msg.file.type.startsWith('image/') ? `
+                                    <img src="${msg.file.url}" class="message-image" onclick="window.open('${msg.file.url}', '_blank')">
+                                ` : ''}
+                                <a href="${msg.file.url}" target="_blank" class="message-file" style="text-decoration: none; color: inherit;">
+                                    📎 ${escapeHtml(msg.file.name)} (${Math.round(msg.file.size / 1024)}KB)
+                                </a>
+                            </div>
                         ` : ''}
                     </div>
                     ${(userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid])) ? `
@@ -1428,11 +1504,43 @@
 
         function parseMessageText(text) {
             const escaped = escapeHtml(text);
-            const imageRegex = /(https?:\/\/[^\s]+(?:\.(?:png|jpg|jpeg|gif|webp|svg)|=s\d+-c)(?:\?[^\s]*)?)/gi;
+            // Updated regex to also match data: URLs (Base64)
+            const imageRegex = /((?:https?:\/\/[^\s]+(?:\.(?:png|jpg|jpeg|gif|webp|svg)|=s\d+-c)(?:\?[^\s]*)?)|(?:data:image\/[a-z]+;base64,[^\s]+))/gi;
 
             return escaped.replace(imageRegex, (url) => {
                 return `<div><img src="${url}" class="message-image" onclick="window.open('${url}', '_blank')"></div>`;
             });
+        }
+
+        function clearAttachment() {
+            pendingAttachment = null;
+            const preview = document.getElementById('attachmentPreview');
+            preview.innerHTML = '';
+            preview.classList.remove('show');
+            document.getElementById('fileInput').value = '';
+        }
+
+        function updateAttachmentPreview(file, dataUrl) {
+            const preview = document.getElementById('attachmentPreview');
+            pendingAttachment = {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                url: dataUrl
+            };
+
+            const isImage = file.type.startsWith('image/');
+            preview.innerHTML = `
+                <div class="preview-thumb">
+                    ${isImage ? `<img src="${dataUrl}" class="preview-thumb">` : '📄'}
+                </div>
+                <div class="preview-info">
+                    <div class="preview-name">${escapeHtml(file.name)}</div>
+                    <div class="preview-size">${Math.round(file.size / 1024)}KB</div>
+                </div>
+                <div class="remove-attachment" onclick="clearAttachment()">×</div>
+            `;
+            preview.classList.add('show');
         }
 
         function escapeHtml(text) {
@@ -1450,12 +1558,14 @@
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
 
-            if (!text || text.length > 2000) return;
+            if (!text && !pendingAttachment) return;
+            if (text.length > 2000) return;
 
             const path = `chat/${currentServer}/${currentChannel}`;
             const userName = document.getElementById('userName').textContent;
             const message = {
                 text: text,
+                file: pendingAttachment,
                 userId: currentUser.uid,
                 userName: userName,
                 userAvatar: currentUser.photoURL || '',
@@ -1463,8 +1573,14 @@
             };
 
             if (firebase.apps.length > 0) {
-                firebase.database().ref(path).push(message);
-                logActivity('message', `Sent message in #${currentChannel}`);
+                firebase.database().ref(path).push(message).then(() => {
+                    if (pendingAttachment) {
+                        logActivity('file', 'Uploaded attachment: ' + pendingAttachment.name);
+                    } else {
+                        logActivity('message', `Sent message in #${currentChannel}`);
+                    }
+                    clearAttachment();
+                });
             }
 
             input.value = '';
@@ -1765,43 +1881,23 @@
             const file = e.target.files[0];
             if (!file || isBanned) return;
 
-            // Optional: Limit file size (e.g., 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('File is too large. Maximum size is 5MB.');
+            // Updated: 1MB limit for Base64 storage to prevent DB bloat
+            if (file.size > 1 * 1024 * 1024) {
+                alert('File is too large for database storage. Maximum size is 1MB.');
                 return;
             }
 
-            const path = 'chat/' + currentServer + '/' + currentChannel;
-            const storagePath = 'chat_files/' + Date.now() + '_' + file.name;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                updateAttachmentPreview(file, event.target.result);
+            };
 
-            try {
-                if (firebase.apps.length > 0) {
-                    const storageRef = firebase.storage().ref(storagePath);
-                    const snapshot = await storageRef.put(file);
-                    const downloadURL = await snapshot.ref.getDownloadURL();
+            reader.onerror = (error) => {
+                console.error("FileReader error:", error);
+                alert("Error reading file.");
+            };
 
-                    const message = {
-                        file: {
-                            name: file.name,
-                            size: file.size,
-                            type: file.type,
-                            url: downloadURL
-                        },
-                        userId: currentUser.uid,
-                        userName: document.getElementById('userName').textContent,
-                        userAvatar: currentUser.photoURL || '',
-                        timestamp: Date.now()
-                    };
-
-                    firebase.database().ref(path).push(message);
-                    logActivity('file', 'Uploaded file: ' + file.name);
-                }
-            } catch (error) {
-                console.error("File upload failed:", error);
-                alert("Failed to upload file.");
-            }
-
-            e.target.value = '';
+            reader.readAsDataURL(file);
         });
 
         function goMainHub() {
