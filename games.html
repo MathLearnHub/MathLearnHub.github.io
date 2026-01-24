@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
   <style>
-
   </style>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -19,14 +18,11 @@
 </head>
 
 <body>
-
   <nav>
     <div id='nav-left'>
-
     </div>
     <div id="nav-right">
       <button id="grid-toggle" onclick="document.body.classList.toggle('grid-view')">Toggle Grid/List View</button>
-
       <img src="images/panic.png" alt="Panic Button" id="panic-button"
         onclick="window.location.href='https://classroom.google.com'" title="Panic Button - Go to Google">
       <img src="images/chat.png" alt="Chat" id="chat-button"
@@ -37,7 +33,6 @@
       <h3 id="apps-button" style="cursor: pointer;" onclick="window.location.href='./apps.html'" title="Apps & Tools">
         Apps</h3>
       -->
-
       <h3 id="home-button" style="cursor: pointer;" onclick="window.location.href='./settings.html'" title="Home">
         Settings</h3>
       <h3 style="cursor:pointer;" onclick="window.location.href = './about.html'" title="About Me">
@@ -45,7 +40,6 @@
       </h3>
     </div>
   </nav>
-
   <script src="js/antiblock.js"></script>
   <script>
     const admin = new URLSearchParams(window.location.search).get('admin');
@@ -59,7 +53,6 @@
       h3.onclick = () => window.location.href = href;
       return h3;
     }
-
     if (admin === 'True') {
       // Admin title on left
       navLeft.appendChild(createNavTitle('Gamer Hubs - Admin', './games.html?admin=True'));
@@ -82,9 +75,8 @@
       //The fun - Main code
       sessionStorage.setItem('freeAccess', 'true');
       sessionStorage.setItem("userroleis", "freeuser");
-
     }
-    else{
+    else {
       navLeft.appendChild(createNavTitle('Gamer HUBS', './games.html'));
       /*navRight.appendChild(createNavTitle('Leaderboard', './leaderboard.html?admin=False')); */
       document.title = 'Studying';
@@ -94,28 +86,36 @@
       window.trackUserOnlineStatus(uids);
       window.trackUser(uids);
     }
-
-    
   </script>
-
   <!-- Universal Message Banner -->
   <div id="universal-banner"
     style="display: none; background: #f44336; color: #fff; padding: 30px 40px; text-align: center; width: 100%; height: 20vh; border-bottom: 5px solid #d32f2f; box-shadow: 0 6px 20px rgba(0,0,0,0.4); font-size: 24px; font-weight: bold; position: relative; margin-bottom: 20px;">
     <span id="banner-text"
       style="display: block; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;"></span>
   </div>
-
   <div id="search-section">
-    
     <img src="images/stubott.png" alt="Game Hub Logo" id="search-logo">
     <div class="search-container">
       <input type="text" id="game-search" placeholder="Search games...">
+      <select id="category-filter"
+        style="padding: 10px; font-size: 16px; border-radius: 5px; border: none; margin-left: 10px; background-color: black; color: white;">
+        <option value="all">All Categories</option>
+        <option value="hot">Hot</option>
+        <option value="parkour">Parkour</option>
+        <option value="multiplayer">Multiplayer</option>
+        <option value="car">Car</option>
+        <option value="shooting">Shooting</option>
+        <option value="sport">Sport</option>
+        <option value="iq">IQ</option>
+        <option value="retro">Retro</option>
+        <option value="flash">Flash</option>
+        <option value="singleplayer">Singleplayer</option>
+      </select>
     </div>
     <div id="online-users" style="font-size: 20px; font-weight: bold; margin: 10px 0; text-align: center;">
-      USERS ONLINE: 
+      USERS ONLINE:
     </div>
   </div>
-
   <ul id="itemList">
     <li class="hot parkour" id="slope" onclick="window.location.href='game/#slope'">
       <div class="text-overlay">Slope</div>
@@ -138,15 +138,12 @@
     <li class="hot parkour shooting" id="n-gon" onclick="window.location.href = 'game/#n-gon'">
       <div class="text-overlay">n-gon</div>
     </li>
-    <li class="hoot parkour shooting" id="timeshooter2" onclick="window.location.hred = 'game/#timeshooter2'">
+    <li class="hoot parkour shooting" id="timeshooter2" onclick="window.location.href = 'game/#timeshooter2'">
       <div class="text-overlay">Time Shooter 2</div>
     </li>
     <!--
-    <li class="hot multiplayer" id="bloxd" onclick="window.location.href = 'active/loader?url=bloxd.io'">
-      <div class="text-overlay">bloxd</div>
-    </li>
     -->
-    <li class="parkour" id="levil-devil" onclick="window.location.href = 'game/#level-devil'">
+    <li class="parkour" id="level-devil" onclick="window.location.href = 'game/#level-devil'">
       <div class="text-overlay">level devil</div>
     </li>
     <li class="hot multiplayer parkour" id="boxing-random" onclick="window.location.href = 'game/#boxing-random'">
@@ -168,7 +165,6 @@
     <li class="hot parkour shooting" id="ice-dodo" onclick="window.location.href = 'game/#ice-dodo'">
       <div class="text-overlay">Ice Dodo</div>
     </li>
-
     <li class="car" id="ultimate-car-driving" onclick="window.location.href = 'game/#ultimate-car-driving'">
       <div class="text-overlay">Ultimate Car Driving Simulator</div>
     </li>
@@ -226,17 +222,11 @@
     <li class="hot sport singleplayer" id="superhot" onclick="window.location.href = 'game/#superhot'">
       <div class="text-overlay">Super Hot</div>
     </li>
-    <li class="hot" id="cluster-rush" onclick="window.location.href='game/#clusterrush'">
-      <div class="text-overlay">Cluster Rush</div>
-    </li>
     <li class="hot car parkour" id="polytrack" onclick="window.location.href='game/#polytrack'">
       <div class="text-overlay">Polytrack</div>
     </li>
     <li class="" id="chicken-jockey-clicker" onclick="window.location.href='game/#chicken-jockey-clicker'">
       <div class="text-overlay">Chicken Jockey Clicker</div>
-    </li>
-    <li class="iq" id="tetris" onclick="window.location.href='game/#tetrs'">
-      <div class="text-overlay">Tetris</div>
     </li>
     <li class="iq" id="stacktris" onclick="window.location.href='game/#stacktris'">
       <div class="text-overlay">Stacktris</div>
@@ -246,9 +236,6 @@
     </li>
     <li class="parkour" id="temple-run-2" onclick="window.location.href='game/#temple-run-2'">
       <div class="text-overlay">Temple Run 2</div>
-    </li>
-    <li class="hot singleplayer parkour" id="tanuki-sunset" onclick="window.location.href='game/#Tanuki-Sunset-main'">
-      <div class="text-overlay">Tanuki Sunset</div>
     </li>
     <li class="car" id="draw-the-hill" onclick="window.location.href='game/#draw-the-hill'">
       <div class="text-overlay">Draw the hill</div>
@@ -386,7 +373,7 @@
     <li class="hot multiplayer" id="yohoho" onclick="window.location.href='game/#yohoho'">
       <div class="text-overlay">Yohoho</div>
     </li>
-    <li class="" id="cookieclicker" onclick="window.location.href='game/cookieclicker'">
+    <li class="" id="cookieclicker" onclick="window.location.href='game/#cookieclicker'">
       <div class="text-overlay">Cookie Clicker (updated)</div>
     </li>
     <li class="parkour" id="x-trench-run" onclick="window.location.href='game/#x-trench-run'">
@@ -471,9 +458,6 @@
     <li id="mario-game" class="retro" onclick="window.location.href='game/#mario-game'">
       <div class="text-overlay">Mario Game</div>
     </li>
-    <li class="hot" id='flappy-bird' onclick="window.location.href='game/#flappy-bird'">
-      <div class="text-overlay">Flappy Bird</div>
-    </li>
     <li id='doge-miner' onclick="window.location.href='game/#doge-miner'">
       <div class="text-overlay">Doge Miner</div>
     </li>
@@ -482,9 +466,6 @@
     </li>
     <li class="parkour" id='crossy-road' onclick="window.location.href='game/#crossy-road'">
       <div class="text-overlay">Crossy Road</div>
-    </li>
-    <li class="hot car sport parkour" id="rocket-league" onclick="window.location.href='game/#rocket-league'">
-      <div class="text-overlay">Rocket League</div>
     </li>
     <li class="hot parkour" id='subway-surfers' onclick="window.location.href='game/#subway-surfers'">
       <div class="text-overlay">Subway Surfers</div>
@@ -693,46 +674,36 @@
     <li class=" flash" id="escape-the-car" onclick="window.location.href = 'game/#escape-the-car'">
       <div class="text-overlay">escape the car</div>
     </li>
-    <li class=" flash" id="riddle-transfer-2" onclick="window.location.href = 'game/#riddle-transfer-2'">
-      <div class="text-overlay">riddle transfer 2</div>
-    </li>
   </ul>
   <script>
-  window.getPeopleCount = function() {
-    return db.ref("users").orderByChild("online").equalTo(true).once("value")
-      .then(snap => snap.numChildren());
-  };
-
-  async function updateOnlineUsers() {
-    const onlineEl = document.getElementById("online-users");
-    if (!onlineEl) return;
-
-    try {
-      const count = await window.getPeopleCount();
-      onlineEl.textContent = `USERS ONLINE: ${count}`;
-    } catch (err) {
-      console.error("Failed to get online users:", err);
-      onlineEl.textContent = `USERS ONLINE: ?`;
+    window.getPeopleCount = function () {
+      return db.ref("users").orderByChild("online").equalTo(true).once("value")
+        .then(snap => snap.numChildren());
+    };
+    async function updateOnlineUsers() {
+      const onlineEl = document.getElementById("online-users");
+      if (!onlineEl) return;
+      try {
+        const count = await window.getPeopleCount();
+        onlineEl.textContent = `USERS ONLINE: ${count}`;
+      } catch (err) {
+        console.error("Failed to get online users:", err);
+        onlineEl.textContent = `USERS ONLINE: ?`;
+      }
     }
-  }
-
-  document.addEventListener("DOMContentLoaded", updateOnlineUsers);
-  setInterval(updateOnlineUsers, 10000);
+    document.addEventListener("DOMContentLoaded", updateOnlineUsers);
+    setInterval(updateOnlineUsers, 10000);
   </script>
-
   <script>
     // Universal Message Banner
     document.addEventListener('DOMContentLoaded', () => {
       const banner = document.getElementById('universal-banner');
       const bannerText = document.getElementById('banner-text');
-
       if (!banner || !bannerText) {
         console.error('Banner elements not found');
         return;
       }
-
       console.log('Banner elements found, initializing...');
-
       if (!window.db) {
         console.error('Firebase db not available!');
         bannerText.textContent = 'Firebase not initialized';
@@ -740,29 +711,26 @@
         return;
       }
       let lastMessageSeen = localStorage.getItem('LastbannerShown');
-
       window.db.ref('info/message').on('value', (snapshot) => {
         const currentMessage = snapshot.val();
         if (currentMessage && currentMessage !== lastMessageSeen) {
           bannerText.textContent = currentMessage;
           banner.style.display = 'block';
-        localStorage.setItem('LastbannerShown', currentMessage);
-        lastMessageSeen = currentMessage;
-
-        setTimeout(() => {
+          localStorage.setItem('LastbannerShown', currentMessage);
+          lastMessageSeen = currentMessage;
+          setTimeout(() => {
+            banner.style.display = 'none';
+          }, 30000);
+        } else {
           banner.style.display = 'none';
-        }, 30000);
-      } else {
-        banner.style.display = 'none';
-      }
+        }
       }, (error) => {
-      console.error('Firebase error:', error);
-      bannerText.textContent = 'Firebase Error: ' + error.message;
-      banner.style.display = 'block';
+        console.error('Firebase error:', error);
+        bannerText.textContent = 'Firebase Error: ' + error.message;
+        banner.style.display = 'block';
       });
     });
   </script>
-
   <script type="text/javascript">
     atOptions = {
       'key': '653a14f22744584ca5c2b6367dbe7288',
@@ -771,16 +739,13 @@
       'width': 320,
       'params': {}
     };
-
     // Use images from ./images/games; remove list items without matching images.
     const itemList = document.getElementById('itemList');
     const gridToggle = document.getElementById('grid-toggle');
-
     function humanize(id) {
       if (!id) return 'Game';
       return id.replace(/[-_.]/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
     }
-
     // Try common extensions for each game id and keep the first that loads.
     function findExistingImage(id, exts = ['png', 'jpg', 'jpeg', 'webp']) {
       return new Promise(resolve => {
@@ -794,7 +759,6 @@
           }
           const src = `images/games/${id}.${exts[i]}`;
           tried.push(src);
-
           const img = new Image();
           img.onload = () => resolve(src);
           img.onerror = () => { i++; tryNext(); };
@@ -803,52 +767,53 @@
         tryNext();
       });
     }
-
     async function initGameList() {
       const items = Array.from(itemList.querySelectorAll('li'));
       for (const li of items) {
         const id = li.id;
-
+        // Extract URL from onclick attribute
+        const onclickAttr = li.getAttribute('onclick');
+        let gameUrl = `game/#${encodeURIComponent(id)}`; // default fallback
+        if (onclickAttr) {
+          // Attempt to extract content inside single or double quotes after href= or location=
+          // Matches basic patterns like window.location.href='...' or just '...'
+          const match = onclickAttr.match(/['"]([^'"]+)['"]/);
+          if (match && match[1]) {
+            gameUrl = match[1];
+          }
+        }
         // Find an image based on the ID only
         const src = await findExistingImage(id);
-
         li.innerHTML = '';
-
+        // Remove original onclick to prevent double firing and rely on our new listener
+        li.removeAttribute('onclick');
         const thumb = document.createElement('div');
         thumb.className = 'thumb';
         thumb.style.backgroundImage = `url('${src}')`;
-
         const caption = document.createElement('div');
         caption.className = 'caption';
         caption.textContent = humanize(id);
-
         const controls = document.createElement('div');
         controls.className = 'controls';
         const openBtn = document.createElement('button');
         openBtn.className = 'openBtn';
         openBtn.textContent = 'Open';
-
         openBtn.addEventListener('click', e => {
           e.stopPropagation();
-          window.open(`game/#${encodeURIComponent(id)}`, '_blank');
+          window.open(gameUrl, '_blank');
         });
-
         controls.appendChild(openBtn);
-
         li.appendChild(thumb);
         li.appendChild(caption);
         li.appendChild(controls);
-
         li.addEventListener('click', () => {
-          window.location.href = `game/#${encodeURIComponent(id)}`;
+          window.location.href = gameUrl;
         });
       }
       // Restore grid/list view
       const savedView = localStorage.getItem('gameHubView');
       if (savedView === 'grid') itemList.classList.add('grid-view');
     }
-
-
     // Restore grid/list view from localStorage
     const savedView = localStorage.getItem('toggleGoForMath');
     if (savedView === 'Grid View') {
@@ -858,7 +823,6 @@
       itemList.classList.remove('grid-view');
       if (gridToggle) gridToggle.textContent = 'Grid View';
     }
-
     if (gridToggle) {
       gridToggle.addEventListener('click', function () {
         itemList.classList.toggle('grid-view');
@@ -867,14 +831,12 @@
         localStorage.setItem('toggleGoForMath', isGrid ? 'Grid View' : 'List View');
       });
     }
-
     // Initialize on DOM ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initGameList);
     } else {
       initGameList();
     }
-
     // Responsive grid: compute how many items fit per row from container width
     (function () {
       const MIN_ITEM_PX = 160; // must match CSS min width used in grid
@@ -896,27 +858,35 @@
       // also call periodically after init to account for images/async layout
       setTimeout(updateGridColumns, 200);
     })();
-
-    // Search functionality
+    // Search and Filter functionality
     const gameSearch = document.getElementById('game-search');
-    gameSearch.addEventListener('input', function () {
-      const searchTerm = this.value.toLowerCase();
+    const categoryFilter = document.getElementById('category-filter');
+    function filterGames() {
+      const searchTerm = gameSearch.value.toLowerCase();
+      const selectedCategory = categoryFilter.value.toLowerCase();
       const gameItems = document.querySelectorAll('#itemList li');
-
       gameItems.forEach(item => {
         const gameName = item.getAttribute('id').toLowerCase();
         const caption = item.querySelector('.caption');
         const captionText = caption ? caption.textContent.toLowerCase() : '';
-
-        if (gameName.includes(searchTerm) || captionText.includes(searchTerm)) {
+        const itemClasses = Array.from(item.classList).map(c => c.toLowerCase());
+        // Check text match
+        const matchesText = gameName.includes(searchTerm) || captionText.includes(searchTerm);
+        // Check category match
+        let matchesCategory = true;
+        if (selectedCategory !== 'all') {
+          matchesCategory = itemClasses.includes(selectedCategory);
+        }
+        if (matchesText && matchesCategory) {
           item.style.display = '';
         } else {
           item.style.display = 'none';
         }
       });
-    });
+    }
+    gameSearch.addEventListener('input', filterGames);
+    categoryFilter.addEventListener('change', filterGames);
   </script>
-
   <script>
     // Track user if pathname is /games.html, ignoring query parameters
     if (window.location.pathname === '/games.html') {
@@ -928,7 +898,5 @@
     }
   </script>
 </body>
-
-
 
 </html>

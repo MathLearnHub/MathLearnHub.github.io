@@ -104,8 +104,8 @@ const doing = false;
 
 async function smartLoadGame(id) {
     const manifests = [
-        "../files/folders.json",
-        "../files/other.json",
+        "https://mathlearnhub.github.io/files/folders.json",
+        "https://mathlearnhub.github.io/files/other.json",
         "https://mathlearnhub.github.io/Learning-Tools/listfolders.json"
     ];
 
@@ -131,7 +131,7 @@ async function smartLoadGame(id) {
             if (!entry) continue;
 
             if (entry.type === "flash") {
-                iframe.src = `../files/flash/#${encodeURIComponent(id)}`;
+                iframe.src = `https://mathlearnhub.github.io/files/flash/#${encodeURIComponent(id)}`;
                 console.log("⚡ Flash (manifest):", iframe.src);
                 return;
             }
@@ -141,13 +141,13 @@ async function smartLoadGame(id) {
                 return;
             }
             if (url.includes("other.json")) {
-                iframe.src = `../files/other/${id}/index.html`;
+                iframe.src = `https://mathlearnhub.github.io/files/other/${id}/index.html`;
                 console.log("📦 Other game:", iframe.src);
                 return;
             }
 
             // Default to normal game
-            iframe.src = `../files/${id}/index.html`;
+            iframe.src = `https://mathlearnhub.github.io/files/${id}/index.html`;
             console.log("🎮 Normal game:", iframe.src);
             return;
 
@@ -158,9 +158,9 @@ async function smartLoadGame(id) {
 
     // 3️Fallback guesses
     const guesses = [
-        `../files/flash/#${encodeURIComponent(id)}`,
-        `../files/${id}/index.html`,
-        `../files/other/${id}/index.html`,
+        `https://mathlearnhub.github.io/files/flash/#${encodeURIComponent(id)}`,
+        `https://mathlearnhub.github.io/files/${id}/index.html`,
+        `https://mathlearnhub.github.io/files/other/${id}/index.html`,
         `https://mathlearnhub.github.io/Learning-Tools/${id}/index.html`
     ];
 
