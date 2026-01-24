@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -363,6 +366,14 @@
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: block;
+        }
+
+        .system-message {
+            color: #b9bbbe;
+            font-style: italic;
+            font-size: 13px;
+            padding-left: 16px;
+            border-left: 3px solid #5865f2;
         }
 
         .message-image:hover {
@@ -750,6 +761,94 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             max-width: fit-content;
         }
+
+        /* Voice Call Overlay */
+        .voice-call-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .voice-call-overlay.show {
+            display: flex;
+        }
+
+        .voice-call-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(88, 101, 242, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 20px rgba(88, 101, 242, 0);
+            }
+        }
+
+        .voice-call-name {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .voice-call-status {
+            font-size: 14px;
+            color: #b9bbbe;
+        }
+
+        .voice-call-controls {
+            display: flex;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .voice-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.2s;
+        }
+
+        .voice-btn.mute {
+            background: #4f545c;
+            color: #fff;
+        }
+
+        .voice-btn.mute.active {
+            background: #ed4245;
+        }
+
+        .voice-btn.hangup {
+            background: #ed4245;
+            color: #fff;
+        }
+
+        .voice-btn.hangup:hover {
+            background: #c03537;
+        }
     </style>
 </head>
 
@@ -765,6 +864,10 @@
             </div>
 
             <div style="width: 32px; height: 2px; background: #36393f; margin: 4px 0;"></div>
+            <div style="width: 32px; height: 2px; background: #36393f; margin: 4px 0;"></div>
+            <!-- Notes moved to Sync (will be handled by JS) -->
+            <div class="server-icon" onclick="switchToNotes()" title="Cloud Notes" id="notesIcon"
+                style="background: #faa81a; color: #000; font-size: 20px;">📝</div>
             <div class="server-icon add" onclick="showCreateServerModal()" title="Create Server">+</div>
             <div class="server-icon add" onclick="showJoinServerModal()" title="Join Server"
                 style="color: #3ba55c; font-size: 24px;">⬇️</div>
@@ -860,6 +963,7 @@
                 <select class="form-input" id="newChannelPrivacy">
                     <option value="public">Public (Everyone can see)</option>
                     <option value="private">Private (Only Admins/Owner can see)</option>
+                    <option value="invite-only">Invite Only (Admins assign specific users)</option>
                 </select>
             </div>
             <div class="form-group">
@@ -1121,6 +1225,21 @@
         </div>
     </div>
 
+    <!-- Voice Call Overlay (for friend calls only) -->
+    <div class="voice-call-overlay" id="voiceCallOverlay">
+        <div class="voice-call-avatar" id="callAvatar">?</div>
+        <div class="voice-call-name" id="callName">Calling...</div>
+        <div class="voice-call-status" id="callStatus">Connecting...</div>
+        <div class="voice-call-controls">
+            <button class="voice-btn mute" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+            <button class="voice-btn" id="screenShareBtn" onclick="toggleScreenShare()" title="Share Screen"
+                style="background: #5865f2; color: white;">🖥️</button>
+            <button class="voice-btn hangup" onclick="endCall()" title="End Call">📞</button>
+        </div>
+        <video id="remoteVideo" autoplay playsinline
+            style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;"></video>
+    </div>
+
     <script>
 
         let currentUser = null;
@@ -1132,6 +1251,23 @@
         let isBanned = false;
         let pendingAttachment = null; // Global variable for the selected file
         let myFriends = {}; // Cache of current user's friends
+
+        // Voice Call Variables (WebRTC - no DB storage)
+        let peerConnection = null;
+        let localStream = null;
+        let isMuted = false;
+        let isScreenSharing = false;
+        let callStartTime = 0;
+        let currentCallFriend = null;
+        let callSignalListener = null;
+
+        // WebRTC Configuration (Google's free STUN servers)
+        const rtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
 
         // Initialize Firebase
 
@@ -1151,12 +1287,19 @@
                                 currentServer = atob(rawServer); // Try Decode Base64
                                 if (currentServer.includes('.') || currentServer.includes('/') || currentServer.length < 3) throw new Error();
                             } catch (e) { currentServer = rawServer; } // Fallback to raw if not valid B64
+                        } else {
+                            // Restore last session from localStorage
+                            const savedServer = localStorage.getItem('lastServer');
+                            if (savedServer) currentServer = savedServer;
                         }
                         if (params.has('channel')) {
                             const rawChannel = params.get('channel');
                             try {
                                 currentChannel = atob(rawChannel);
                             } catch (e) { currentChannel = rawChannel; }
+                        } else {
+                            const savedChannel = localStorage.getItem('lastChannel');
+                            if (savedChannel) currentChannel = savedChannel;
                         }
 
                         checkBanStatus();
@@ -1311,6 +1454,8 @@
 
         function switchServer(serverId) {
             currentServer = serverId;
+            // Save session for persistence
+            localStorage.setItem('lastServer', serverId);
 
             // Update server icons active class
             document.querySelectorAll('.server-icon').forEach(s => s.classList.remove('active'));
@@ -1319,6 +1464,7 @@
 
             // Reset channel when switching server
             currentChannel = 'general';
+            localStorage.setItem('lastChannel', 'general');
 
             loadChannels();
         }
@@ -1409,13 +1555,27 @@
                 ${textChannels.map(channelId => {
                 const ch = channels[channelId];
                 const isPrivate = ch && ch.visibility === 'private';
-                const canSee = !isPrivate || isAdmin;
+                const isInviteOnly = ch && ch.visibility === 'invite-only';
+                const isPureAdmin = userRole === 'admin';
+                const isGCOwner = currentServerData && currentServerData.owner === currentUser.uid;
+                const isAllowedUser = ch && ch.allowedUsers && ch.allowedUsers[currentUser.uid];
+
+                // Visibility logic
+                let canSee = true;
+                if (isPrivate) {
+                    canSee = isAdmin; // Admins/Owner/GC Admins can see private
+                } else if (isInviteOnly) {
+                    canSee = isPureAdmin || isGCOwner || isAllowedUser; // Only PURE admin, GC owner, or specifically allowed
+                }
 
                 if (!canSee) return '';
 
+                const icon = (ch && ch.locked) || (ch && ch.lockType && ch.lockType !== 'none') ? '🔒'
+                    : (isInviteOnly ? '🔐' : (isPrivate ? '👁️‍🗨️' : '#'));
+
                 return `
                         <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
-                            <span>${(ch && ch.locked) || (ch && ch.lockType && ch.lockType !== 'none') ? '🔒' : (isPrivate ? '👁️‍🗨️' : '#')}</span>
+                            <span>${icon}</span>
                             <span>${channelId}</span>
                         </div>
                     `;
@@ -1439,6 +1599,9 @@
 
         function switchChannel(channelId) {
             currentChannel = channelId;
+            // Save session for persistence
+            localStorage.setItem('lastChannel', channelId);
+
             document.getElementById('channelName').textContent = channelId;
             document.getElementById('channelIcon').textContent = '#';
 
@@ -1470,7 +1633,15 @@
                     ${(currentServer !== '__dms__' && (isGlobalAdmin || isGCOwner)) ? (currentServer !== 'main' ? `<button class="btn btn-danger" onclick="deleteServer('${currentServer}')" style="margin-left: 8px;">🗑️ Delete GC</button>` : '') : ''}
                 `;
             } else if (currentServer === '__dms__') {
-                controls.innerHTML = '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>';
+                // Get friend UID from channel ID for call button
+                const parts = currentChannel.split('_');
+                const friendUid = parts[0] === currentUser.uid ? parts[1] : parts[0];
+                const friendData = myFriends[friendUid];
+                const friendName = friendData ? friendData.name : 'Friend';
+                controls.innerHTML = `
+                    <button class="btn btn-primary" onclick="startCall('${friendUid}', '${friendName}')">📞 Call</button>
+                    <button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>
+                `;
             } else {
                 controls.innerHTML = '';
             }
@@ -1538,10 +1709,15 @@
                 messagesListener.off();
             }
 
-            const path = `chat/${currentServer}/${currentChannel}`;
+            let path = `chat/${currentServer}/${currentChannel}`;
+            if (currentServer === '__notes__') {
+                path = `users/${currentUser.uid}/notes/messages`;
+            } else if (currentServer === '__dms__') {
+                path = `chat/__dms__/${currentChannel}`;
+            }
 
             if (firebase.apps.length > 0) {
-                messagesListener = firebase.database().ref(path).limitToLast(20);
+                messagesListener = firebase.database().ref(path).limitToLast(50);
                 messagesListener.on('value', (snapshot) => {
                     const messages = snapshot.val() || {};
                     renderMessages(messages);
@@ -1555,7 +1731,18 @@
             const container = document.getElementById('messages');
             const msgArray = Object.entries(messages).map(([id, msg]) => ({ id, ...msg }));
 
-            container.innerHTML = msgArray.map(msg => `
+            container.innerHTML = msgArray.map(msg => {
+                // System Message Rendering (Call Logs)
+                if (msg.isSystem) {
+                    return `
+                        <div class="message system-message">
+                            <i style="margin-right: 8px;">ℹ️</i> ${escapeHtml(msg.text)}
+                            <span class="message-time" style="float: right;">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                    `;
+                }
+
+                return `
                 <div class="message">
                     <div class="message-avatar">
                         ${createAvatarHTML(msg.userAvatar, msg.userName, '40px')}
@@ -1647,7 +1834,12 @@
             if (!text && !pendingAttachment) return;
             if (text.length > 2000) return;
 
-            const path = `chat/${currentServer}/${currentChannel}`;
+            let path = `chat/${currentServer}/${currentChannel}`;
+            if (currentServer === '__notes__') {
+                path = `users/${currentUser.uid}/notes/messages`;
+            } else if (currentServer === '__dms__') {
+                path = `chat/__dms__/${currentChannel}`;
+            }
             const userName = document.getElementById('userName').textContent;
             const message = {
                 text: text,
@@ -2098,6 +2290,9 @@
                         timestamp: Date.now()
                     }).then(() => {
                         alert('Friend request sent!');
+                        // Check if we have incoming request from them to auto-accept? 
+                        // Simplified: just UI update
+                        loadFriendRequests(); // Refresh requests UI just in case
                     });
                 }
             }
@@ -2147,6 +2342,7 @@
                 firebase.database().ref().update(updates).then(() => {
                     alert(`Accepted! You and ${name} are now friends.`);
                     loadFriends();
+                    loadFriendRequests(); // Should empty the list
                 });
             }
         }
@@ -2195,6 +2391,10 @@
             currentServer = '__dms__';
             currentChannel = getDMChannelId(currentUser.uid, friendUid);
             currentServerData = null; // Reset server-specific data for DMs
+
+            // Save session for persistence
+            localStorage.setItem('lastServer', '__dms__');
+            localStorage.setItem('lastChannel', currentChannel);
 
             document.getElementById('channelName').textContent = 'DM: ' + friendName;
             document.getElementById('channelIcon').textContent = '👤';
@@ -2489,6 +2689,349 @@
                 }
             }
         }
+        // =====================================================
+        // NOTES - Cloud Synced (Database)
+        // =====================================================
+        function switchToNotes() {
+            currentServer = '__notes__';
+            currentChannel = 'personal';
+            currentServerData = null;
+
+            // Save session
+            localStorage.setItem('lastServer', '__notes__');
+            localStorage.setItem('lastChannel', 'personal');
+
+            // Update UI
+            document.getElementById('serverName').textContent = '📝 MY NOTES';
+            document.getElementById('channelName').textContent = 'Cloud Notes';
+            document.getElementById('channelIcon').textContent = '☁️';
+            document.getElementById('channelList').innerHTML = `
+                <div class="channel active" data-channel="personal">
+                    <span>📝</span>
+                    <span>Personal Notes</span>
+                </div>
+            `;
+
+            // Update sidebar
+            document.querySelectorAll('.server-icon').forEach(s => s.classList.remove('active'));
+            document.getElementById('notesIcon').classList.add('active');
+
+            // Hide members panel for notes
+            document.getElementById('memberList').innerHTML = '<div style="color: #72767d; text-align: center; padding: 20px;">Encrypted Personal Notes<br><br>Synced across all your devices</div>';
+            document.getElementById('memberCount').textContent = '1';
+
+            updateChatControls();
+            loadMessages();
+        }
+
+        // =====================================================
+        // VOICE CALLS & SCREEN SHARE
+        // =====================================================
+        async function startCall(friendUid, friendName) {
+            if (!myFriends[friendUid]) {
+                alert('You can only call friends!');
+                return;
+            }
+
+            try {
+                callStartTime = Date.now();
+                // Get microphone access
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                // Create peer connection
+                peerConnection = new RTCPeerConnection(rtcConfig);
+
+                // Add local audio track
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                // Handle incoming stream (Audio or Video/Screen)
+                peerConnection.ontrack = (event) => {
+                    if (event.track.kind === 'video') {
+                        const remoteVideo = document.getElementById('remoteVideo');
+                        remoteVideo.srcObject = event.streams[0];
+                        remoteVideo.style.display = 'block';
+                        document.getElementById('callAvatar').style.display = 'none';
+                    } else {
+                        const remoteAudio = new Audio();
+                        remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.autoplay = true;
+                        remoteAudio.id = 'remoteAudio';
+                        document.body.appendChild(remoteAudio);
+                    }
+                    document.getElementById('callStatus').textContent = 'Connected!';
+                };
+
+                // Handle ICE candidates - send through DM as signal message
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        sendCallSignal(friendUid, { type: 'ice', candidate: event.candidate });
+                    }
+                };
+
+                // Create and send offer
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                sendCallSignal(friendUid, { type: 'offer', offer: offer });
+
+                // Show call UI
+                currentCallFriend = { uid: friendUid, name: friendName };
+                showCallOverlay(friendName, 'Calling...');
+
+                // Listen for answer
+                listenForCallSignals(friendUid);
+
+            } catch (err) {
+                console.error('Call failed:', err);
+                alert('Could not start call. Please allow microphone access.');
+                endCall();
+            }
+        }
+
+        async function answerCall(friendUid, friendName, offer) {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                peerConnection = new RTCPeerConnection(rtcConfig);
+
+                localStream.getTracks().forEach(track => {
+                    peerConnection.addTrack(track, localStream);
+                });
+
+                peerConnection.ontrack = (event) => {
+                    if (event.track.kind === 'video') {
+                        const remoteVideo = document.getElementById('remoteVideo');
+                        remoteVideo.srcObject = event.streams[0];
+                        remoteVideo.style.display = 'block';
+                        document.getElementById('callAvatar').style.display = 'none';
+                    } else {
+                        const remoteAudio = new Audio();
+                        remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.autoplay = true;
+                        remoteAudio.id = 'remoteAudio';
+                        document.body.appendChild(remoteAudio);
+                    }
+                    document.getElementById('callStatus').textContent = 'Connected!';
+                };
+
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        sendCallSignal(friendUid, { type: 'ice', candidate: event.candidate });
+                    }
+                };
+
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                sendCallSignal(friendUid, { type: 'answer', answer: answer });
+
+                currentCallFriend = { uid: friendUid, name: friendName };
+                showCallOverlay(friendName, 'Connected!');
+
+            } catch (err) {
+                console.error('Answer failed:', err);
+                endCall();
+            }
+        }
+
+        function sendCallSignal(toUid, signal) {
+            // Send signal through DM chat as a special message (will be parsed and deleted)
+            const dmChannelId = getDMChannelId(currentUser.uid, toUid);
+            const signalMsg = {
+                text: '',
+                userId: currentUser.uid,
+                userName: '__CALL_SIGNAL__',
+                signal: JSON.stringify(signal),
+                timestamp: Date.now()
+            };
+            firebase.database().ref(`chat/__dms__/${dmChannelId}`).push(signalMsg);
+        }
+
+        function listenForCallSignals(friendUid) {
+            const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+            callSignalListener = firebase.database().ref(`chat/__dms__/${dmChannelId}`)
+                .orderByChild('timestamp')
+                .startAt(Date.now() - 30000) // Only last 30 seconds
+                .on('child_added', async (snapshot) => {
+                    const msg = snapshot.val();
+                    if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid) {
+                        const signal = JSON.parse(msg.signal);
+
+                        // Delete signal message immediately (no DB storage!)
+                        snapshot.ref.remove();
+
+                        if (signal.type === 'answer' && peerConnection) {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                            document.getElementById('callStatus').textContent = 'Connected!';
+                        } else if (signal.type === 'ice' && peerConnection) {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                        } else if (signal.type === 'hangup') {
+                            endCall();
+                        }
+                    }
+                });
+        }
+
+        function showCallOverlay(name, status) {
+            document.getElementById('callAvatar').textContent = name[0].toUpperCase();
+            document.getElementById('callName').textContent = name;
+            document.getElementById('callStatus').textContent = status;
+            document.getElementById('voiceCallOverlay').classList.add('show');
+        }
+
+        async function toggleScreenShare() {
+            if (!peerConnection) return;
+
+            try {
+                if (isScreenSharing) {
+                    // Stop sharing
+                    const senders = peerConnection.getSenders();
+                    const sender = senders.find(s => s.track.kind === 'video');
+                    if (sender) {
+                        peerConnection.removeTrack(sender);
+                    }
+                    isScreenSharing = false;
+                    document.getElementById('screenShareBtn').style.background = '#5865f2';
+                    document.getElementById('callStatus').textContent = 'Connected';
+                } else {
+                    // Start sharing
+                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                    const videoTrack = stream.getVideoTracks()[0];
+
+                    // Handle user stopping share via browser UI
+                    videoTrack.onended = () => {
+                        if (isScreenSharing) toggleScreenShare();
+                    };
+
+                    const senders = peerConnection.getSenders();
+                    const sender = senders.find(s => s.track.kind === 'video');
+
+                    if (sender) {
+                        sender.replaceTrack(videoTrack);
+                    } else {
+                        peerConnection.addTrack(videoTrack, stream);
+                    }
+
+                    isScreenSharing = true;
+                    document.getElementById('screenShareBtn').style.background = '#ed4245'; // Red indicates "Stop Sharing"
+                    document.getElementById('callStatus').textContent = 'Sharing Screen...';
+
+                    // Send renegotiation offer needed for new track
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    sendCallSignal(currentCallFriend.uid, { type: 'offer', offer: offer });
+                }
+            } catch (err) {
+                console.error("Screen share error:", err);
+            }
+        }
+
+        function toggleMute() {
+            if (localStream) {
+                isMuted = !isMuted;
+                localStream.getAudioTracks().forEach(track => {
+                    track.enabled = !isMuted;
+                });
+                const btn = document.getElementById('muteBtn');
+                btn.classList.toggle('active', isMuted);
+                btn.textContent = isMuted ? '🔇' : '🎤';
+            }
+        }
+
+        function endCall() {
+            // Log call duration
+            if (currentCallFriend && callStartTime > 0) {
+                const durationMs = Date.now() - callStartTime;
+                const minutes = Math.floor(durationMs / 60000);
+                const seconds = ((durationMs % 60000) / 1000).toFixed(0);
+                const durationStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+                // Send system message to DM (only if call connected longer than 5s)
+                if (durationMs > 5000) {
+                    const dmChannelId = getDMChannelId(currentUser.uid, currentCallFriend.uid);
+                    firebase.database().ref(`chat/__dms__/${dmChannelId}`).push({
+                        text: `📞 Call ended - Duration: ${durationStr}`,
+                        userId: 'SYSTEM',
+                        userName: 'System',
+                        timestamp: Date.now(),
+                        isSystem: true
+                    });
+                }
+            }
+
+            // Send hangup signal
+            if (currentCallFriend) {
+                sendCallSignal(currentCallFriend.uid, { type: 'hangup' });
+            }
+
+            // Cleanup
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            if (callSignalListener) {
+                const dmChannelId = currentCallFriend ? getDMChannelId(currentUser.uid, currentCallFriend.uid) : null;
+                if (dmChannelId) {
+                    firebase.database().ref(`chat/__dms__/${dmChannelId}`).off('child_added', callSignalListener);
+                }
+                callSignalListener = null;
+            }
+
+            // Remove remote elements
+            const remoteAudio = document.getElementById('remoteAudio');
+            if (remoteAudio) remoteAudio.remove();
+            const remoteVideo = document.getElementById('remoteVideo');
+            if (remoteVideo) {
+                remoteVideo.srcObject = null;
+                remoteVideo.style.display = 'none';
+            }
+            document.getElementById('callAvatar').style.display = 'flex';
+
+            // Hide overlay
+            document.getElementById('voiceCallOverlay').classList.remove('show');
+            isMuted = false;
+            isScreenSharing = false;
+            callStartTime = 0;
+            currentCallFriend = null;
+            document.getElementById('muteBtn').classList.remove('active');
+            document.getElementById('muteBtn').textContent = '🎤';
+            document.getElementById('screenShareBtn').style.background = '#5865f2';
+        }
+
+        // Check for incoming calls
+        function checkIncomingCalls() {
+            Object.keys(myFriends).forEach(friendUid => {
+                const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+                firebase.database().ref(`chat/__dms__/${dmChannelId}`)
+                    .orderByChild('timestamp')
+                    .startAt(Date.now() - 10000)
+                    .once('value', (snapshot) => {
+                        snapshot.forEach(child => {
+                            const msg = child.val();
+                            if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid && !currentCallFriend) {
+                                const signal = JSON.parse(msg.signal);
+                                if (signal.type === 'offer') {
+                                    const friendName = myFriends[msg.userId]?.name || 'Friend';
+                                    if (confirm(`📞 Incoming call from ${friendName}! Answer?`)) {
+                                        child.ref.remove();
+                                        answerCall(msg.userId, friendName, signal.offer);
+                                    } else {
+                                        child.ref.remove();
+                                    }
+                                }
+                            }
+                        });
+                    });
+            });
+        }
+
+        // Check for calls every 3 seconds
+        setInterval(checkIncomingCalls, 3000);
 
         // Initialize app
         initApp();
@@ -2496,3 +3039,4 @@
 </body>
 
 </html>
+
