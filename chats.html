@@ -1959,7 +1959,7 @@
             }
 
             container.innerHTML = friendArray.map(friend => `
-                <div class="channel" style="font-size: 14px; padding: 4px 8px;">
+                <div class="channel" onclick="switchChannel('Social talk')" data-channel="Social talk" style="font-size: 14px; padding: 4px 8px;">
                     ${createAvatarHTML(friend.icon, friend.name, '20px')}
                     <span>${friend.name}</span>
                 </div>
