@@ -855,6 +855,21 @@
                 <label class="form-label">Channel Name</label>
                 <input type="text" class="form-input" id="newChannelName" placeholder="new-channel">
             </div>
+            <div class="form-group">
+                <label class="form-label">Privacy</label>
+                <select class="form-input" id="newChannelPrivacy">
+                    <option value="public">Public (Everyone can see)</option>
+                    <option value="private">Private (Only Admins/Owner can see)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Posting Restricted</label>
+                <select class="form-input" id="newChannelLockType">
+                    <option value="none">Open (Everyone can type)</option>
+                    <option value="restricted">Restricted (Only GC Admins+ can type)</option>
+                    <option value="super">Super Restricted (Only Owner & Pure Admins can type)</option>
+                </select>
+            </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="hideModal('createChannelModal')">Cancel</button>
                 <button class="btn btn-primary" onclick="createChannel()">Create</button>
@@ -1391,12 +1406,20 @@
 
             channelList.innerHTML = `
                 <div class="channel-category">Text Channels</div>
-                ${textChannels.map(channelId => `
-                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
-                        <span>${channels[channelId].locked ? '🔒' : '#'}</span>
-                        <span>${channelId}</span>
-                    </div>
-                `).join('')}
+                ${textChannels.map(channelId => {
+                const ch = channels[channelId];
+                const isPrivate = ch && ch.visibility === 'private';
+                const canSee = !isPrivate || isAdmin;
+
+                if (!canSee) return '';
+
+                return `
+                        <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
+                            <span>${(ch && ch.locked) || (ch && ch.lockType && ch.lockType !== 'none') ? '🔒' : (isPrivate ? '👁️‍🗨️' : '#')}</span>
+                            <span>${channelId}</span>
+                        </div>
+                    `;
+            }).join('')}
                 ${voiceChannels.length > 0 ? '<div class="channel-category">Voice Channels</div>' : ''}
                 ${voiceChannels.map(channelId => `
                     <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
@@ -1457,27 +1480,52 @@
 
         function checkChannelLock() {
             if (firebase.apps.length > 0) {
-                firebase.database().ref(`servers/${currentServer}/channels/${currentChannel}/locked`).once('value', (snapshot) => {
-                    const locked = snapshot.val();
-                    updateLockStatus(locked);
+                firebase.database().ref(`servers/${currentServer}/channels/${currentChannel}`).once('value', (snapshot) => {
+                    const data = snapshot.val();
+                    updateLockStatus(data);
                 });
             } else {
-                updateLockStatus(false);
+                updateLockStatus(null);
             }
         }
 
-        function updateLockStatus(locked) {
+        function updateLockStatus(channelData) {
             const banner = document.getElementById('lockedBanner');
             const inputArea = document.getElementById('inputArea');
+
+            // Permissions
+            const isPureAdmin = userRole === 'admin';
+            const isGCOwner = currentServerData && currentServerData.owner === currentUser.uid;
+            const isGCAdmin = currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid];
+
+            const lockType = channelData ? (channelData.lockType || (channelData.locked ? 'restricted' : 'none')) : 'none';
 
             if (isBanned) {
                 banner.innerHTML = '<div class="locked-banner">🚫 You are banned from this server.</div>';
                 inputArea.style.display = 'none';
-            } else if (locked && userRole !== 'admin') {
-                banner.innerHTML = '<div class="locked-banner">🔒 This channel is locked. Only admins can send messages.</div>';
-                inputArea.style.display = 'none';
-            } else if (currentChannel === 'rules' && currentServer === 'main' && userRole !== 'admin') {
-                banner.innerHTML = '<div class="locked-banner">⚠️ Only admins can post in this channel.</div>';
+                return;
+            }
+
+            let canType = true;
+            let lockMsg = '';
+
+            if (lockType === 'restricted') {
+                if (!isPureAdmin && !isGCOwner && !isGCAdmin) {
+                    canType = false;
+                    lockMsg = '🔒 This channel is restricted. Only GC Admins+ can send messages.';
+                }
+            } else if (lockType === 'super') {
+                if (!isPureAdmin && !isGCOwner) {
+                    canType = false;
+                    lockMsg = '🔒 This channel is super restricted. Only the Owner and Pure Admins can type here.';
+                }
+            } else if (currentChannel === 'rules' && currentServer === 'main' && !isPureAdmin) {
+                canType = false;
+                lockMsg = '⚠️ Only Pure Admins can post in this channel.';
+            }
+
+            if (!canType) {
+                banner.innerHTML = `<div class="locked-banner">${lockMsg}</div>`;
                 inputArea.style.display = 'none';
             } else {
                 banner.innerHTML = '';
@@ -1647,14 +1695,23 @@
         }
 
         function toggleLock() {
-            const path = 'servers/' + currentServer + '/channels/' + currentChannel + '/locked';
+            const path = 'servers/' + currentServer + '/channels/' + currentChannel;
             if (firebase.apps.length > 0) {
                 firebase.database().ref(path).once('value', (snapshot) => {
-                    const newState = !snapshot.val();
-                    firebase.database().ref(path).set(newState).then(() => {
+                    const data = snapshot.val() || {};
+                    const currentType = data.lockType || (data.locked ? 'restricted' : 'none');
+                    let nextType = 'none';
+                    if (currentType === 'none') nextType = 'restricted';
+                    else if (currentType === 'restricted') nextType = 'super';
+                    else nextType = 'none';
+
+                    firebase.database().ref(path).update({
+                        lockType: nextType,
+                        locked: nextType !== 'none'
+                    }).then(() => {
                         loadChannels(); // Refresh sidebar to show lock emoji
                     });
-                    logActivity('lock', (newState ? 'Locked' : 'Unlocked') + ' #' + currentChannel);
+                    logActivity('lock', `Changed #${currentChannel} lock to ${nextType}`);
                     checkChannelLock();
                 });
             }
@@ -1761,13 +1818,20 @@
             }
 
             const name = document.getElementById('newChannelName').value.trim();
+            const privacy = document.getElementById('newChannelPrivacy').value;
+            const lockType = document.getElementById('newChannelLockType').value;
+
             if (!name) return;
 
             const channelId = name.toLowerCase().replace(/\s+/g, '-');
 
             if (firebase.apps.length > 0) {
-                firebase.database().ref('servers/' + currentServer + '/channels/' + channelId).set(true);
-                logActivity('create_channel', 'Created channel: #' + channelId);
+                firebase.database().ref('servers/' + currentServer + '/channels/' + channelId).set({
+                    visibility: privacy,
+                    lockType: lockType,
+                    locked: lockType !== 'none'
+                });
+                logActivity('create_channel', `Created ${privacy} ${lockType} channel: #${channelId}`);
             }
 
             hideModal('createChannelModal');
