@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1624,28 +1623,40 @@
             const isGCOwner = currentServerData && currentServerData.owner === currentUser.uid;
             const isGCAdmin = currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid];
 
-            if (isGlobalAdmin || isGCOwner || isGCAdmin) {
-                controls.innerHTML = `
-                    ${isGlobalAdmin ? '<button class="btn btn-primary" onclick="showAdminPanel()">🛡️ Global Admin</button>' : ''}
-                    ${(currentServer !== '__dms__' && (isGCOwner || isGCAdmin || isGlobalAdmin)) ? '<button class="btn btn-primary" onclick="showManageServerModal()">⚙️ Manage GC</button>' : ''}
-                    ${currentServer !== '__dms__' ? '<button class="btn btn-secondary" onclick="toggleLock()">🔒 Lock</button>' : ''}
-                    ${(isGlobalAdmin || isGCOwner || currentServer === '__dms__') ? '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>' : ''}
-                    ${(currentServer !== '__dms__' && (isGlobalAdmin || isGCOwner)) ? (currentServer !== 'main' ? `<button class="btn btn-danger" onclick="deleteServer('${currentServer}')" style="margin-left: 8px;">🗑️ Delete GC</button>` : '') : ''}
-                `;
-            } else if (currentServer === '__dms__') {
-                // Get friend UID from channel ID for call button
+            let html = '';
+
+            // 1. DMs take priority for Call Button
+            if (currentServer === '__dms__') {
                 const parts = currentChannel.split('_');
                 const friendUid = parts[0] === currentUser.uid ? parts[1] : parts[0];
-                const friendData = myFriends[friendUid];
+                const friendData = myFriends ? myFriends[friendUid] : null;
                 const friendName = friendData ? friendData.name : 'Friend';
-                controls.innerHTML = `
-                    <button class="btn btn-primary" onclick="startCall('${friendUid}', '${friendName}')">📞 Call</button>
-                    <button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>
-                `;
-            } else {
-                controls.innerHTML = '';
+
+                html += `<button class="btn btn-primary" onclick="startCall('${friendUid}', '${friendName}')">📞 Call</button>`;
+                html += `<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>`;
             }
 
+            // 2. Global Admin Button (Always show if admin)
+            if (isGlobalAdmin) {
+                html += '<button class="btn btn-primary" onclick="showAdminPanel()">🛡️ Global Admin</button>';
+            }
+
+            // 3. Server Management (Not in DMs)
+            if (currentServer !== '__dms__' && currentServer !== '__notes__') {
+                if (isGCOwner || isGCAdmin || isGlobalAdmin) {
+                    html += '<button class="btn btn-primary" onclick="showManageServerModal()">⚙️ Manage GC</button>';
+                    html += '<button class="btn btn-secondary" onclick="toggleLock()">🔒 Lock</button>';
+                }
+
+                if (isGlobalAdmin || isGCOwner) {
+                    html += `<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>`;
+                    if (currentServer !== 'main') {
+                        html += `<button class="btn btn-danger" onclick="deleteServer('${currentServer}')" style="margin-left: 8px;">🗑️ Delete GC</button>`;
+                    }
+                }
+            }
+
+            controls.innerHTML = html;
             checkChannelLock();
         }
 
@@ -1705,6 +1716,10 @@
         }
 
         function loadMessages() {
+            if (!currentUser) {
+                renderMessages({});
+                return;
+            }
             if (messagesListener) {
                 messagesListener.off();
             }
@@ -1770,7 +1785,8 @@
                         </div>
                     ` : ''}
                 </div>
-            `).join('');
+            `;
+            }).join('');
 
             container.scrollTop = container.scrollHeight;
         }
@@ -2835,96 +2851,48 @@
             }
         }
 
-        function sendCallSignal(toUid, signal) {
-            // Send signal through DM chat as a special message (will be parsed and deleted)
-            const dmChannelId = getDMChannelId(currentUser.uid, toUid);
-            const signalMsg = {
-                text: '',
-                userId: currentUser.uid,
-                userName: '__CALL_SIGNAL__',
-                signal: JSON.stringify(signal),
-                timestamp: Date.now()
-            };
-            firebase.database().ref(`chat/__dms__/${dmChannelId}`).push(signalMsg);
+        function getDMChannelId(uid1, uid2) {
+            return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
         }
 
-        function listenForCallSignals(friendUid) {
-            const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
-            callSignalListener = firebase.database().ref(`chat/__dms__/${dmChannelId}`)
-                .orderByChild('timestamp')
-                .startAt(Date.now() - 30000) // Only last 30 seconds
-                .on('child_added', async (snapshot) => {
-                    const msg = snapshot.val();
-                    if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid) {
-                        const signal = JSON.parse(msg.signal);
-
-                        // Delete signal message immediately (no DB storage!)
-                        snapshot.ref.remove();
-
-                        if (signal.type === 'answer' && peerConnection) {
-                            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
-                            document.getElementById('callStatus').textContent = 'Connected!';
-                        } else if (signal.type === 'ice' && peerConnection) {
-                            await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
-                        } else if (signal.type === 'hangup') {
-                            endCall();
-                        }
-                    }
-                });
-        }
-
-        function showCallOverlay(name, status) {
-            document.getElementById('callAvatar').textContent = name[0].toUpperCase();
-            document.getElementById('callName').textContent = name;
-            document.getElementById('callStatus').textContent = status;
-            document.getElementById('voiceCallOverlay').classList.add('show');
-        }
-
-        async function toggleScreenShare() {
+        async function handleCallSignal(signal) {
             if (!peerConnection) return;
 
-            try {
-                if (isScreenSharing) {
-                    // Stop sharing
-                    const senders = peerConnection.getSenders();
-                    const sender = senders.find(s => s.track.kind === 'video');
-                    if (sender) {
-                        peerConnection.removeTrack(sender);
-                    }
-                    isScreenSharing = false;
-                    document.getElementById('screenShareBtn').style.background = '#5865f2';
-                    document.getElementById('callStatus').textContent = 'Connected';
-                } else {
-                    // Start sharing
-                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-                    const videoTrack = stream.getVideoTracks()[0];
-
-                    // Handle user stopping share via browser UI
-                    videoTrack.onended = () => {
-                        if (isScreenSharing) toggleScreenShare();
-                    };
-
-                    const senders = peerConnection.getSenders();
-                    const sender = senders.find(s => s.track.kind === 'video');
-
-                    if (sender) {
-                        sender.replaceTrack(videoTrack);
-                    } else {
-                        peerConnection.addTrack(videoTrack, stream);
-                    }
-
-                    isScreenSharing = true;
-                    document.getElementById('screenShareBtn').style.background = '#ed4245'; // Red indicates "Stop Sharing"
-                    document.getElementById('callStatus').textContent = 'Sharing Screen...';
-
-                    // Send renegotiation offer needed for new track
-                    const offer = await peerConnection.createOffer();
-                    await peerConnection.setLocalDescription(offer);
-                    sendCallSignal(currentCallFriend.uid, { type: 'offer', offer: offer });
-                }
-            } catch (err) {
-                console.error("Screen share error:", err);
+            if (signal.type === 'answer') {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                document.getElementById('callStatus').textContent = 'Connected!';
+            } else if (signal.type === 'ice' && peerConnection) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            } else if (signal.type === 'hangup') {
+                endCall();
             }
+        }
+
+        function checkIncomingCalls() {
+            if (!currentUser || !myFriends) return;
+            Object.keys(myFriends).forEach(friendUid => {
+                const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+                firebase.database().ref(`chat/__dms__/${dmChannelId}`)
+                    .orderByChild('timestamp')
+                    .startAt(Date.now() - 10000)
+                    .once('value', (snapshot) => {
+                        snapshot.forEach(child => {
+                            const msg = child.val();
+                            if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid && !currentCallFriend) {
+                                const signal = JSON.parse(msg.signal);
+                                if (signal.type === 'offer') {
+                                    const friendName = myFriends[msg.userId]?.name || 'Friend';
+                                    if (confirm(`📞 Incoming call from ${friendName}! Answer?`)) {
+                                        child.ref.remove();
+                                        answerCall(msg.userId, friendName, signal.offer);
+                                    } else {
+                                        child.ref.remove();
+                                    }
+                                }
+                            }
+                        });
+                    });
+            });
         }
 
         function toggleMute() {
@@ -3003,31 +2971,95 @@
             document.getElementById('screenShareBtn').style.background = '#5865f2';
         }
 
-        // Check for incoming calls
-        function checkIncomingCalls() {
-            Object.keys(myFriends).forEach(friendUid => {
-                const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
-                firebase.database().ref(`chat/__dms__/${dmChannelId}`)
-                    .orderByChild('timestamp')
-                    .startAt(Date.now() - 10000)
-                    .once('value', (snapshot) => {
-                        snapshot.forEach(child => {
-                            const msg = child.val();
-                            if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid && !currentCallFriend) {
-                                const signal = JSON.parse(msg.signal);
-                                if (signal.type === 'offer') {
-                                    const friendName = myFriends[msg.userId]?.name || 'Friend';
-                                    if (confirm(`📞 Incoming call from ${friendName}! Answer?`)) {
-                                        child.ref.remove();
-                                        answerCall(msg.userId, friendName, signal.offer);
-                                    } else {
-                                        child.ref.remove();
-                                    }
-                                }
-                            }
-                        });
-                    });
-            });
+        function sendCallSignal(toUid, signal) {
+            // Send signal through DM chat as a special message (will be parsed and deleted)
+            const dmChannelId = getDMChannelId(currentUser.uid, toUid);
+            const signalMsg = {
+                text: '',
+                userId: currentUser.uid,
+                userName: '__CALL_SIGNAL__',
+                signal: JSON.stringify(signal),
+                timestamp: Date.now()
+            };
+            firebase.database().ref(`chat/__dms__/${dmChannelId}`).push(signalMsg);
+        }
+
+        function listenForCallSignals(friendUid) {
+            const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+            callSignalListener = firebase.database().ref(`chat/__dms__/${dmChannelId}`)
+                .orderByChild('timestamp')
+                .startAt(Date.now() - 30000) // Only last 30 seconds
+                .on('child_added', async (snapshot) => {
+                    const msg = snapshot.val();
+                    if (msg.userName === '__CALL_SIGNAL__' && msg.userId !== currentUser.uid) {
+                        const signal = JSON.parse(msg.signal);
+
+                        // Delete signal message immediately (no DB storage!)
+                        snapshot.ref.remove();
+
+                        if (signal.type === 'answer' && peerConnection) {
+                            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal.answer));
+                            document.getElementById('callStatus').textContent = 'Connected!';
+                        } else if (signal.type === 'ice' && peerConnection) {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(signal.candidate));
+                        } else if (signal.type === 'hangup') {
+                            endCall();
+                        }
+                    }
+                });
+        }
+
+        function showCallOverlay(name, status) {
+            document.getElementById('callAvatar').textContent = name[0].toUpperCase();
+            document.getElementById('callName').textContent = name;
+            document.getElementById('callStatus').textContent = status;
+            document.getElementById('voiceCallOverlay').classList.add('show');
+        }
+
+        async function toggleScreenShare() {
+            if (!peerConnection) return;
+
+            try {
+                if (isScreenSharing) {
+                    // Stop sharing
+                    const senders = peerConnection.getSenders();
+                    const sender = senders.find(s => s.track.kind === 'video');
+                    if (sender) {
+                        peerConnection.removeTrack(sender);
+                    }
+                    isScreenSharing = false;
+                    document.getElementById('screenShareBtn').style.background = '#5865f2';
+                    document.getElementById('callStatus').textContent = 'Connected';
+                } else {
+                    // Start sharing
+                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                    const videoTrack = stream.getVideoTracks()[0];
+
+                    videoTrack.onended = () => {
+                        if (isScreenSharing) toggleScreenShare();
+                    };
+
+                    const senders = peerConnection.getSenders();
+                    const sender = senders.find(s => s.track.kind === 'video');
+
+                    if (sender) {
+                        sender.replaceTrack(videoTrack);
+                    } else {
+                        peerConnection.addTrack(videoTrack, stream);
+                    }
+
+                    isScreenSharing = true;
+                    document.getElementById('screenShareBtn').style.background = '#ed4245';
+                    document.getElementById('callStatus').textContent = 'Sharing Screen...';
+
+                    // Send renegotiation offer
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    sendCallSignal(currentCallFriend.uid, { type: 'offer', offer: offer });
+                }
+            } catch (err) {
+                console.error("Screen share error:", err);
+            }
         }
 
         // Check for calls every 3 seconds
