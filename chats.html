@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/configstuff.js"></script>
     <script src="js/user.js"></script>
     <script src="js/settings-loader.js"></script>
     <style>
@@ -38,7 +39,22 @@
             align-items: center;
             padding: 12px 0;
             gap: 8px;
+            height: 100vh;
+        }
+
+        .server-list-dynamic {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
             overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Hide scrollbar but keep functionality */
+        .server-list-dynamic::-webkit-scrollbar {
+            display: none;
         }
 
         .server-icon {
@@ -181,6 +197,43 @@
             display: flex;
             flex-direction: column;
             background: #36393f;
+            min-width: 0;
+        }
+
+        .members {
+            width: 240px;
+            background: #2f3136;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        .member-item {
+            padding: 6px 8px;
+            margin: 1px 0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .member-item:hover {
+            background: #393c43;
+        }
+
+        .member-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #747f8d;
+            border: 2px solid #2f3136;
+        }
+
+        .member-status.online {
+            background: #3ba55c;
         }
 
         .chat-header {
@@ -299,6 +352,21 @@
         .message-text {
             color: #dcddde;
             word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .message-image {
+            max-width: 400px;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-top: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+
+        .message-image:hover {
+            border-color: #5865f2;
         }
 
         .message-file {
@@ -621,9 +689,18 @@
         <div class="servers">
             <div class="server-icon" title="Go Back" onclick="goMainHub()"
                 style="background: #3ba55c; color: white; box-shadow: 0 4px 10px rgba(59, 165, 92, 0.3);">←</div>
-            <div class="server-icon add" onclick="showCreateServerModal()">+</div>
-            <div style="width: 32px; height: 2px; background: #36393f; margin: 8px 0;"></div>
-            <div class="server-icon" title="Settings" onclick="showSettingsModal()" style="font-size: 20px;">⚙️</div>
+            <div style="width: 32px; height: 2px; background: #36393f; margin: 4px 0;"></div>
+
+            <div class="server-list-dynamic" id="serverListDynamic">
+                <!-- Dynamic servers will be rendered here -->
+            </div>
+
+            <div style="width: 32px; height: 2px; background: #36393f; margin: 4px 0;"></div>
+            <div class="server-icon add" onclick="showCreateServerModal()" title="Create Server">+</div>
+            <div class="server-icon add" onclick="showJoinServerModal()" title="Join Server"
+                style="color: #3ba55c; font-size: 24px;">⬇️</div>
+            <div class="server-icon" title="Settings" onclick="showSettingsModal()"
+                style="font-size: 20px; margin-top: 4px;">⚙️</div>
         </div>
 
         <div class="channels">
@@ -636,6 +713,10 @@
                 <div class="channel-category">Social</div>
                 <div id="friendsList" style="padding: 8px;">
                     <div style="color: #72767d; font-size: 12px; text-align: center;">No friends yet</div>
+                </div>
+                <div class="channel" onclick="addFriendPrompt()"
+                    style="margin: 4px 8px; font-size: 14px; background: rgba(88, 101, 242, 0.1); color: #5865f2; border: 1px dashed #5865f2; justify-content: center;">
+                    <span>👤+ Add Friend by ID</span>
                 </div>
             </div>
 
@@ -675,6 +756,11 @@
                 </div>
             </div>
         </div>
+
+        <div class="members">
+            <div class="channel-category">Members — <span id="memberCount">0</span></div>
+            <div id="memberList"></div>
+        </div>
     </div>
 
     <div class="modal" id="createServerModal">
@@ -705,30 +791,42 @@
         </div>
     </div>
 
-    <div class="modal" id="adminPanelModal">
+    <div class="modal" id="joinServerModal">
         <div class="modal-content">
-            <div class="modal-header">🛡️ Admin Control Panel</div>
-
-            <div class="admin-section">
-                <div class="admin-section-title">User Management</div>
-                <div class="user-list" id="userList">
-                    <div style="color: #72767d; text-align: center; padding: 20px;">Loading users...</div>
-                </div>
+            <div class="modal-header">Join a Server</div>
+            <div class="form-group">
+                <label class="form-label">Server Code (ID)</label>
+                <input type="text" class="form-input" id="joinServerId" placeholder="server-id-here">
             </div>
-
-            <div class="admin-section">
-                <div class="admin-section-title">Activity Log</div>
-                <div class="activity-log" id="activityLog">
-                    <div style="color: #72767d; text-align: center; padding: 20px;">Loading activity...</div>
-                </div>
-            </div>
-
             <div class="modal-footer">
-                <button class="btn btn-danger" onclick="goMainHub()" style="margin-right: auto;">Exit to Games
-                    Hub</button>
-                <button class="btn btn-secondary" onclick="hideModal('adminPanelModal')">Close</button>
+                <button class="btn btn-secondary" onclick="hideModal('joinServerModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="joinServer()">Join</button>
             </div>
         </div>
+    </div>
+    <div class="modal-content">
+        <div class="modal-header">🛡️ Admin Control Panel</div>
+
+        <div class="admin-section">
+            <div class="admin-section-title">User Management</div>
+            <div class="user-list" id="userList">
+                <div style="color: #72767d; text-align: center; padding: 20px;">Loading users...</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="admin-section-title">Activity Log</div>
+            <div class="activity-log" id="activityLog">
+                <div style="color: #72767d; text-align: center; padding: 20px;">Loading activity...</div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="goMainHub()" style="margin-right: auto;">Exit to Games
+                Hub</button>
+            <button class="btn btn-secondary" onclick="hideModal('adminPanelModal')">Close</button>
+        </div>
+    </div>
     </div>
 
     <div class="modal" id="settingsModal">
@@ -888,6 +986,17 @@
     <div class="modal" id="manageServerModal">
         <div class="modal-content">
             <div class="modal-header">⚙️ Manage Group Chat</div>
+            <div class="admin-section" id="serverIdSection"
+                style="background: rgba(0,0,0,0.1); padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="admin-section-title" style="font-size: 14px; margin-bottom: 8px; color: #b9bbbe;">Server
+                    Code (Share this with friends)</div>
+                <div style="display: flex; gap: 8px;">
+                    <code id="displayServerId"
+                        style="background: #202225; padding: 8px; border-radius: 4px; flex: 1; border: 1px solid #4f545c; font-family: monospace;">loading...</code>
+                    <button class="btn btn-secondary"
+                        onclick="copyToClipboard(document.getElementById('displayServerId').textContent, 'Server code copied!')">📋</button>
+                </div>
+            </div>
             <div class="admin-section">
                 <div class="admin-section-title">GC Members & Admins</div>
                 <div id="gcAdminList" class="user-list">
@@ -901,15 +1010,6 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAIzv7rOF5LtQmC1AVeQqAjrGHUZnJomFY",
-            authDomain: "track-study-9f2eb.firebaseapp.com",
-            projectId: "track-study-9f2eb",
-            storageBucket: "track-study-9f2eb.firebasestorage.app",
-            messagingSenderId: "461107985386",
-            appId: "1:461107985386:web:15c694a7c946da0a5d1093",
-            databaseURL: "https://track-study-9f2eb-default-rtdb.firebaseio.com"
-        };
 
         let currentUser = null;
         let currentServer = 'main';
@@ -920,9 +1020,7 @@
         let isBanned = false;
 
         // Initialize Firebase
-        if (firebaseConfig.apiKey) {
-            firebase.initializeApp(firebaseConfig);
-        }
+
 
         // Check authentication
         function initApp() {
@@ -933,8 +1031,19 @@
 
                         // Parse URL params for direct join
                         const params = new URLSearchParams(window.location.search);
-                        if (params.has('server')) currentServer = params.get('server');
-                        if (params.has('channel')) currentChannel = params.get('channel');
+                        if (params.has('server')) {
+                            const rawServer = params.get('server');
+                            try {
+                                currentServer = atob(rawServer); // Try Decode Base64
+                                if (currentServer.includes('.') || currentServer.includes('/') || currentServer.length < 3) throw new Error();
+                            } catch (e) { currentServer = rawServer; } // Fallback to raw if not valid B64
+                        }
+                        if (params.has('channel')) {
+                            const rawChannel = params.get('channel');
+                            try {
+                                currentChannel = atob(rawChannel);
+                            } catch (e) { currentChannel = rawChannel; }
+                        }
 
                         checkBanStatus();
                     } else {
@@ -1012,6 +1121,15 @@
             }
         }
 
+        function createAvatarHTML(avatarUrl, name, size = '32px') {
+            const firstLetter = (name || '?')[0].toUpperCase();
+            if (avatarUrl) {
+                return `<img src="${avatarUrl}" style="width: ${size}; height: ${size}; border-radius: 50%; object-fit: cover;" onerror="this.outerHTML='<div class=\'user-avatar\' style=\'width: ${size}; height: ${size}; font-size: calc(${size} / 2.2);\'>${firstLetter}</div>'">`;
+            } else {
+                return `<div class="user-avatar" style="width: ${size}; height: ${size}; font-size: calc(${size} / 2.2);">${firstLetter}</div>`;
+            }
+        }
+
         function updateUserDisplay(name) {
             document.getElementById('userName').textContent = name;
             const roleEl = document.getElementById('userRole');
@@ -1022,11 +1140,7 @@
             }
 
             const avatarEl = document.getElementById('userAvatar');
-            if (currentUser && currentUser.photoURL) {
-                avatarEl.innerHTML = `<img src="${currentUser.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;">`;
-            } else {
-                avatarEl.textContent = name[0].toUpperCase();
-            }
+            avatarEl.innerHTML = createAvatarHTML(currentUser && currentUser.photoURL, name);
         }
 
         function loadServers() {
@@ -1041,55 +1155,115 @@
         }
 
         function renderServers(servers) {
-            const serverList = document.querySelector('.servers');
-            serverList.innerHTML = '<div class="server-icon active" onclick="switchServer(\'main\')" id="server-main">M</div>';
+            const dynamicList = document.getElementById('serverListDynamic');
+            dynamicList.innerHTML = '';
+
+            // Main server icon
+            const mainIcon = document.createElement('div');
+            mainIcon.className = `server-icon ${currentServer === 'main' ? 'active' : ''}`;
+            mainIcon.id = 'server-main';
+            mainIcon.textContent = 'M';
+            mainIcon.title = 'Main Server';
+            mainIcon.onclick = () => switchServer('main');
+            dynamicList.appendChild(mainIcon);
 
             const isGlobalAdmin = userRole === 'admin';
 
             Object.keys(servers).forEach(serverId => {
                 if (serverId !== 'main') {
                     const server = servers[serverId];
-
-                    // Permission Check: Global Admin, Owner, or Member
-                    const isOwner = server.owner === currentUser.uid;
-                    const isMember = (server.members && server.members[currentUser.uid]) || (server.admins && server.admins[currentUser.uid]);
+                    const isOwner = currentUser && server.owner === currentUser.uid;
+                    const isMember = currentUser && ((server.members && server.members[currentUser.uid]) || (server.admins && server.admins[currentUser.uid]));
 
                     if (isGlobalAdmin || isOwner || isMember) {
                         const icon = document.createElement('div');
-                        icon.className = 'server-icon';
+                        icon.className = `server-icon ${currentServer === serverId ? 'active' : ''}`;
                         icon.id = 'server-' + serverId;
-                        icon.textContent = server.name[0].toUpperCase();
+                        const serverName = server.name || 'Unnamed Server';
+                        icon.textContent = serverName[0].toUpperCase();
+                        icon.title = serverName + (isGlobalAdmin && !isMember && !isOwner ? ' (Admin View)' : '');
                         icon.onclick = () => switchServer(serverId);
-                        serverList.appendChild(icon);
+                        dynamicList.appendChild(icon);
                     }
                 }
             });
 
-            const addBtn = document.createElement('div');
-            addBtn.className = 'server-icon add';
-            addBtn.textContent = '+';
-            addBtn.onclick = showCreateServerModal;
-            serverList.appendChild(addBtn);
-
-            // If current server is not visible anymore, switch to main
-            const currentServerEl = document.getElementById('server-' + currentServer);
-            if (!currentServerEl && currentServer !== 'main') switchServer('main');
+            // Auto-switch if current server is gone
+            if (currentServer !== 'main' && !document.getElementById('server-' + currentServer)) {
+                switchServer('main');
+            }
         }
 
         function switchServer(serverId) {
             currentServer = serverId;
+
+            // Update server icons active class
             document.querySelectorAll('.server-icon').forEach(s => s.classList.remove('active'));
             const serverEl = document.getElementById('server-' + serverId);
             if (serverEl) serverEl.classList.add('active');
+
+            // Reset channel when switching server
+            currentChannel = 'general';
+
             loadChannels();
+        }
+
+        function loadServerMembers() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('users').once('value', (snapshot) => {
+                    const allUsers = snapshot.val() || {};
+                    renderServerMembers(allUsers);
+                });
+            }
+        }
+
+        function renderServerMembers(allUsers) {
+            const container = document.getElementById('memberList');
+            const countEl = document.getElementById('memberCount');
+            if (!container || !countEl) return;
+
+            const serverAdmins = (currentServerData && currentServerData.admins) || {};
+            const serverMembers = (currentServerData && currentServerData.members) || {};
+            const ownerId = currentServerData && currentServerData.owner;
+
+            const eligibleUsers = Object.entries(allUsers).filter(([uid, data]) => {
+                if (currentServer === 'main') return true;
+                return uid === ownerId || serverAdmins[uid] || serverMembers[uid];
+            }).map(([uid, data]) => ({ uid, ...data }));
+
+            countEl.textContent = eligibleUsers.length;
+
+            container.innerHTML = eligibleUsers.sort((a, b) => (a.online === b.online ? 0 : a.online ? -1 : 1)).map(user => `
+                <div class="member-item" onclick="addFriendPromptWithId('${user.uid}', '${user.name || 'User'}')">
+                    <div style="position: relative;">
+                        ${createAvatarHTML(user.icon || (user.uid === currentUser.uid ? currentUser.photoURL : ''), user.name)}
+                        <div class="member-status ${user.online ? 'online' : ''}" style="position: absolute; bottom: -2px; right: -2px;"></div>
+                    </div>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.name || 'User'}</div>
+                        <div style="font-size: 11px; color: #b9bbbe;">${user.uid === ownerId ? 'Owner' : (serverAdmins[user.uid] || user.role === 'admin' ? 'Admin' : 'Member')}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addFriendPromptWithId(uid, name) {
+            if (uid === currentUser.uid) return;
+            if (confirm(`Add ${name} as a friend?`)) {
+                addFriend(uid, name);
+            }
         }
 
         function loadChannels() {
             if (firebase.apps.length > 0) {
                 firebase.database().ref('servers/' + currentServer).once('value', (snapshot) => {
-                    currentServerData = snapshot.val() || { name: 'Server', channels: { general: true } };
+                    const data = snapshot.val();
+                    currentServerData = data || { name: 'Server', channels: { general: true } };
+                    if (!currentServerData.name) currentServerData.name = 'Server';
+
                     document.getElementById('serverName').textContent = currentServerData.name.toUpperCase();
                     renderChannels(currentServerData.channels || { general: true });
+                    loadServerMembers();
                 });
             } else {
                 currentServerData = { name: 'MAIN SERVER', channels: { general: true, rules: true } };
@@ -1105,17 +1279,22 @@
             const textChannels = Object.keys(channels).filter(c => c !== 'voice-chat');
             const voiceChannels = Object.keys(channels).filter(c => c === 'voice-chat');
 
+            // Ensure currentChannel is valid for this server
+            if (!channels[currentChannel]) {
+                currentChannel = textChannels[0] || 'general';
+            }
+
             channelList.innerHTML = `
                 <div class="channel-category">Text Channels</div>
                 ${textChannels.map(channelId => `
-                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')">
+                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
                         <span>${channels[channelId].locked ? '🔒' : '#'}</span>
                         <span>${channelId}</span>
                     </div>
                 `).join('')}
                 ${voiceChannels.length > 0 ? '<div class="channel-category">Voice Channels</div>' : ''}
                 ${voiceChannels.map(channelId => `
-                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')">
+                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')" data-channel="${channelId}">
                         <span>🔊</span>
                         <span>${channelId}</span>
                     </div>
@@ -1133,6 +1312,16 @@
         function switchChannel(channelId) {
             currentChannel = channelId;
             document.getElementById('channelName').textContent = channelId;
+
+            // Update active class in sidebar
+            document.querySelectorAll('.channel').forEach(el => {
+                if (el.dataset.channel === channelId) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+
             updateChatControls();
             loadMessages();
         }
@@ -1212,14 +1401,14 @@
             container.innerHTML = msgArray.map(msg => `
                 <div class="message">
                     <div class="message-avatar">
-                        ${msg.userAvatar ? `<img src="${msg.userAvatar}" style="width: 100%; height: 100%; border-radius: 50%;">` : (msg.userName ? msg.userName[0].toUpperCase() : 'U')}
+                        ${createAvatarHTML(msg.userAvatar, msg.userName, '40px')}
                     </div>
                     <div class="message-content">
                         <div class="message-header">
                             <span class="message-author">${msg.userName || 'User'}</span>
                             <span class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
                         </div>
-                        ${msg.text ? `<div class="message-text">${escapeHtml(msg.text)}</div>` : ''}
+                        ${msg.text ? `<div class="message-text">${parseMessageText(msg.text)}</div>` : ''}
                         ${msg.file ? `
                             <a href="${msg.file.url}" target="_blank" class="message-file" style="text-decoration: none; color: inherit;">
                                 📎 ${escapeHtml(msg.file.name)} (${Math.round(msg.file.size / 1024)}KB)
@@ -1235,6 +1424,15 @@
             `).join('');
 
             container.scrollTop = container.scrollHeight;
+        }
+
+        function parseMessageText(text) {
+            const escaped = escapeHtml(text);
+            const imageRegex = /(https?:\/\/[^\s]+(?:\.(?:png|jpg|jpeg|gif|webp|svg)|=s\d+-c)(?:\?[^\s]*)?)/gi;
+
+            return escaped.replace(imageRegex, (url) => {
+                return `<div><img src="${url}" class="message-image" onclick="window.open('${url}', '_blank')"></div>`;
+            });
         }
 
         function escapeHtml(text) {
@@ -1299,7 +1497,9 @@
             if (firebase.apps.length > 0) {
                 firebase.database().ref(path).once('value', (snapshot) => {
                     const newState = !snapshot.val();
-                    firebase.database().ref(path).set(newState);
+                    firebase.database().ref(path).set(newState).then(() => {
+                        loadChannels(); // Refresh sidebar to show lock emoji
+                    });
                     logActivity('lock', (newState ? 'Locked' : 'Unlocked') + ' #' + currentChannel);
                     checkChannelLock();
                 });
@@ -1340,6 +1540,31 @@
 
             hideModal('createServerModal');
             document.getElementById('newServerName').value = '';
+        }
+
+        function showJoinServerModal() {
+            document.getElementById('joinServerModal').classList.add('show');
+        }
+
+        function joinServer() {
+            const serverId = document.getElementById('joinServerId').value.trim();
+            if (!serverId) return;
+
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('servers/' + serverId).once('value', (snap) => {
+                    if (!snap.exists()) {
+                        alert("Server not found! Please check the code.");
+                    } else {
+                        firebase.database().ref(`servers/${serverId}/members/${currentUser.uid}`).set(true).then(() => {
+                            logActivity('join_server', `Joined server: ${serverId}`);
+                            hideModal('joinServerModal');
+                            document.getElementById('joinServerId').value = '';
+                            switchServer(serverId);
+                            alert("Successfully joined the server!");
+                        });
+                    }
+                });
+            }
         }
 
         function createChannel() {
@@ -1389,7 +1614,9 @@
             userList.innerHTML = userArray.map(user => `
                 <div class="user-item">
                     <div class="user-item-info">
-                        <div class="user-item-avatar">${user.name ? user.name[0].toUpperCase() : 'U'}</div>
+                        <div style="position: relative;">
+                            ${createAvatarHTML(user.icon, user.name)}
+                        </div>
                         <div>
                             <div style="font-weight: 600;">${user.name || 'User'}</div>
                             <div style="font-size: 12px; color: #72767d;">
@@ -1587,13 +1814,20 @@
 
         function copyInviteLink() {
             const url = new URL(window.location.href);
-            url.searchParams.set('server', currentServer);
-            url.searchParams.set('channel', currentChannel);
+            // Base64 encode IDs to prevent simple scraping/abuse
+            url.searchParams.set('server', btoa(currentServer));
+            url.searchParams.set('channel', btoa(currentChannel));
 
             navigator.clipboard.writeText(url.toString()).then(() => {
-                alert('Invite link copied to clipboard!');
+                alert('Secure invite link copied to clipboard!');
             }).catch(err => {
                 console.error('Text not copied', err);
+            });
+        }
+
+        function copyToClipboard(text, message) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(message || 'Copied to clipboard!');
             });
         }
 
@@ -1630,10 +1864,24 @@
 
             container.innerHTML = friendArray.map(friend => `
                 <div class="channel" style="font-size: 14px; padding: 4px 8px;">
-                    <div class="user-avatar" style="width: 20px; height: 20px; font-size: 10px;">${friend.name[0].toUpperCase()}</div>
+                    ${createAvatarHTML(friend.icon, friend.name, '20px')}
                     <span>${friend.name}</span>
                 </div>
             `).join('');
+        }
+
+        function addFriendPrompt() {
+            const uid = prompt("Enter the User ID of the person you want to add:");
+            if (!uid) return;
+
+            firebase.database().ref(`users/${uid}`).once('value', (snap) => {
+                const data = snap.val();
+                if (!data) {
+                    alert("User not found!");
+                } else {
+                    addFriend(uid, data.name || 'User');
+                }
+            });
         }
 
         function switchSettingTab(tabId) {
@@ -1749,6 +1997,8 @@
         function showManageServerModal() {
             const isAuthorized = userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid]);
             if (!currentServerData || !isAuthorized) return;
+
+            document.getElementById('displayServerId').textContent = currentServer;
             document.getElementById('manageServerModal').classList.add('show');
             loadGCUserList();
         }
@@ -1786,11 +2036,12 @@
                             </div>
                         </div>
                         <div class="user-item-actions">
-                            ${!isGCMember ? `<button class="btn btn-primary" onclick="toggleGCMember('${user.uid}', false, '${user.name || 'User'}')">Add to GC</button>` : ''}
+                            ${!isGCMember ? `<button class="btn btn-primary" onclick="forceAddUserToGC('${user.uid}', '${user.name || 'User'}')">Add to GC</button>` : ''}
                             ${canManageAdmins ? `
                                 <button class="btn ${isGCAdmin ? 'btn-danger' : 'btn-primary'}" onclick="toggleGCAdmin('${user.uid}', ${isGCAdmin})">
                                     ${isGCAdmin ? 'Remove Admin' : 'Make GC Admin'}
                                 </button>
+                                <button class="btn btn-danger" onclick="banUser('${user.uid}', '${user.name || 'User'}')" title="Ban from server">Ban</button>
                             ` : ''}
                             ${isGCMember ? `<button class="btn btn-danger" onclick="toggleGCMember('${user.uid}', true, '${user.name || 'User'}')">Kick</button>` : ''}
                         </div>
