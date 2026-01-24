@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vencoid</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="js/user.js"></script>
+    <script src="js/settings-loader.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at top left, #36393f, #202225);
+            color: #dcddde;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+
+        .servers {
+            width: 72px;
+            background: #202225;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0;
+            gap: 8px;
+            overflow-y: auto;
+        }
+
+        .server-icon {
+            width: 48px;
+            height: 48px;
+            background: #36393f;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 18px;
+            position: relative;
+        }
+
+        .server-icon:hover {
+            border-radius: 16px;
+            background: #5865f2;
+        }
+
+        .server-icon.active {
+            border-radius: 16px;
+            background: #5865f2;
+        }
+
+        .server-icon.add {
+            background: #36393f;
+            color: #3ba55c;
+            font-size: 32px;
+        }
+
+        .channels {
+            width: 240px;
+            background: #2f3136;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .server-header {
+            height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #202225;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .channel-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .channel-category {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #8e9297;
+            font-weight: 600;
+            text-transform: uppercase;
+            padding: 0 8px;
+            margin-bottom: 4px;
+        }
+
+        .channel {
+            padding: 6px 8px;
+            margin: 1px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #96989d;
+            font-size: 16px;
+        }
+
+        .channel:hover {
+            background: #393c43;
+            color: #dcddde;
+        }
+
+        .channel.active {
+            background: #393c43;
+            color: #fff;
+        }
+
+        .channel.locked {
+            opacity: 0.6;
+        }
+
+        .user-area {
+            height: 52px;
+            background: #292b2f;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #b9bbbe;
+        }
+
+        .admin-badge {
+            background: #ed4245;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #36393f;
+        }
+
+        .chat-header {
+            height: 48px;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #202225;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #5865f2;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #4752c4;
+        }
+
+        .btn-danger {
+            background: #ed4245;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #c03537;
+        }
+
+        .btn-secondary {
+            background: #4f545c;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #5d6269;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message {
+            padding: 4px 16px 4px 72px;
+            position: relative;
+            min-height: 44px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message:hover {
+            background: #32353b;
+        }
+
+        .message-avatar {
+            position: absolute;
+            left: 16px;
+            top: 4px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message-content {
+            flex: 1;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .message-author {
+            font-weight: 600;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #72767d;
+        }
+
+        .message-text {
+            color: #dcddde;
+            word-wrap: break-word;
+        }
+
+        .message-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2f3136;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        .message-file:hover {
+            background: #36393f;
+        }
+
+        .message-actions {
+            position: absolute;
+            top: -16px;
+            right: 16px;
+            background: #18191c;
+            border: 1px solid #202225;
+            border-radius: 4px;
+            display: none;
+            gap: 4px;
+            padding: 4px;
+        }
+
+        .message:hover .message-actions {
+            display: flex;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b9bbbe;
+        }
+
+        .action-btn:hover {
+            background: #4f545c;
+            color: #fff;
+        }
+
+        .input-area {
+            padding: 16px;
+        }
+
+        .message-input {
+            background: rgba(64, 68, 75, 0.8);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #dcddde;
+            font-size: 15px;
+            width: 100%;
+            resize: none;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .message-input:focus {
+            outline: none;
+            background: rgba(64, 68, 75, 1);
+            border-color: #5865f2;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .input-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px 0;
+        }
+
+        .input-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: #b9bbbe;
+        }
+
+        .icon-btn:hover {
+            color: #dcddde;
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: #72767d;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(54, 57, 63, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            width: 95%;
+            max-width: none;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #b9bbbe;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #202225;
+            border: 1px solid #202225;
+            border-radius: 4px;
+            padding: 10px;
+            color: #dcddde;
+            font-size: 16px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #5865f2;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .locked-banner {
+            background: #faa81a;
+            color: #000;
+            padding: 8px 16px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .admin-panel {
+            background: #2f3136;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .admin-section {
+            margin-bottom: 24px;
+        }
+
+        .admin-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ed4245;
+        }
+
+        .user-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .user-item {
+            background: #202225;
+            padding: 12px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-item-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #5865f2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .activity-log {
+            background: #202225;
+            padding: 12px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            padding: 8px;
+            border-bottom: 1px solid #2f3136;
+            font-size: 14px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-time {
+            color: #72767d;
+            font-size: 12px;
+        }
+
+        .banned-badge {
+            background: #ed4245;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2e3338;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #202225;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #18191c;
+        }
+
+        /* Settings Hub Styles */
+        .setting-tab:hover {
+            background: rgba(79, 84, 92, 0.1) !important;
+            color: #fff !important;
+        }
+
+        .setting-tab.active {
+            background: rgba(79, 84, 92, 0.3) !important;
+            color: #fff !important;
+            font-weight: 600;
+        }
+
+        .settings-page h2 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .settings-page p {
+            font-size: 14px;
+            color: #b9bbbe;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="servers">
+            <div class="server-icon" title="Go Back" onclick="goMainHub()"
+                style="background: #3ba55c; color: white; box-shadow: 0 4px 10px rgba(59, 165, 92, 0.3);">←</div>
+            <div class="server-icon add" onclick="showCreateServerModal()">+</div>
+            <div style="width: 32px; height: 2px; background: #36393f; margin: 8px 0;"></div>
+            <div class="server-icon" title="Settings" onclick="showSettingsModal()" style="font-size: 20px;">⚙️</div>
+        </div>
+
+        <div class="channels">
+            <div class="server-header" id="serverName">MAIN SERVER</div>
+
+            <div class="channel-list">
+                <div class="channel-category">Chat</div>
+                <div id="channelList"></div>
+
+                <div class="channel-category">Social</div>
+                <div id="friendsList" style="padding: 8px;">
+                    <div style="color: #72767d; font-size: 12px; text-align: center;">No friends yet</div>
+                </div>
+            </div>
+
+            <div class="user-area">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-info">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-role" id="userRole">member</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span id="channelIcon">#</span>
+                    <span id="channelName">general</span>
+                    <button class="icon-btn" onclick="copyInviteLink()" title="Copy Invite Link"
+                        style="font-size: 14px; margin-left: 4px;">🔗</button>
+                </div>
+                <div class="chat-controls" id="chatControls"></div>
+            </div>
+            <div id="lockedBanner"></div>
+            <div class="messages" id="messages"></div>
+            <div class="input-area" id="inputArea">
+                <div class="input-container">
+                    <textarea class="message-input" id="messageInput" placeholder="Message #general" maxlength="2000"
+                        rows="1"></textarea>
+                    <div class="input-footer">
+                        <div class="input-buttons">
+                            <input type="file" id="fileInput" style="display: none;">
+                            <button class="icon-btn" onclick="document.getElementById('fileInput').click()"
+                                title="Upload File">📎</button>
+                        </div>
+                        <span class="char-count"><span id="charCount">0</span>/2000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createServerModal">
+        <div class="modal-content">
+            <div class="modal-header">Create a Server</div>
+            <div class="form-group">
+                <label class="form-label">Server Name</label>
+                <input type="text" class="form-input" id="newServerName" placeholder="My Awesome Server">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('createServerModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createServer()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="createChannelModal">
+        <div class="modal-content">
+            <div class="modal-header">Create a Channel</div>
+            <div class="form-group">
+                <label class="form-label">Channel Name</label>
+                <input type="text" class="form-input" id="newChannelName" placeholder="new-channel">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('createChannelModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createChannel()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="adminPanelModal">
+        <div class="modal-content">
+            <div class="modal-header">🛡️ Admin Control Panel</div>
+
+            <div class="admin-section">
+                <div class="admin-section-title">User Management</div>
+                <div class="user-list" id="userList">
+                    <div style="color: #72767d; text-align: center; padding: 20px;">Loading users...</div>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <div class="admin-section-title">Activity Log</div>
+                <div class="activity-log" id="activityLog">
+                    <div style="color: #72767d; text-align: center; padding: 20px;">Loading activity...</div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-danger" onclick="goMainHub()" style="margin-right: auto;">Exit to Games
+                    Hub</button>
+                <button class="btn btn-secondary" onclick="hideModal('adminPanelModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settingsModal">
+        <div class="modal-content"
+            style="display: flex; flex-direction: row; padding: 0; min-height: 500px; border-radius: 16px; overflow: hidden; width: 95%; max-width: 1000px;">
+            <!-- Settings Sidebar -->
+            <div
+                style="width: 240px; background: rgba(32, 34, 37, 0.95); padding: 20px; border-right: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column;">
+                <div
+                    style="font-size: 12px; font-weight: 800; color: #8e9297; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px;">
+                    User Settings</div>
+                <div class="setting-tab active" onclick="switchSettingTab('profile')" id="tab-profile"
+                    style="padding: 10px; border-radius: 4px; cursor: pointer; color: #fff; margin-bottom: 4px;">👤 My
+                    Profile</div>
+                <div class="setting-tab" onclick="switchSettingTab('vibe')" id="tab-vibe"
+                    style="padding: 10px; border-radius: 4px; cursor: pointer; color: #b9bbbe; margin-bottom: 4px;">🎨
+                    Visual Vibe</div>
+                <div class="setting-tab" onclick="switchSettingTab('privacy')" id="tab-privacy"
+                    style="padding: 10px; border-radius: 4px; cursor: pointer; color: #b9bbbe; margin-bottom: 4px;">🔒
+                    Privacy</div>
+                <div class="setting-tab" onclick="switchSettingTab('account')" id="tab-account"
+                    style="padding: 10px; border-radius: 4px; cursor: pointer; color: #b9bbbe; margin-bottom: 4px;">⚙️
+                    Account</div>
+
+                <div style="margin-top: auto;">
+                    <button class="btn btn-danger" onclick="firebase.auth().signOut()"
+                        style="width: 100%; text-align: left; background: rgba(237, 66, 69, 0.1); color: #ed4245; border: 1px solid rgba(237, 66, 69, 0.3); font-weight: 600;">Sign
+                        Out</button>
+                    <div style="font-size: 10px; color: #72767d; margin-top: 12px; text-align: center;">Vencoid v1.2
+                        &bull; Created with ❤️</div>
+                </div>
+            </div>
+
+            <!-- Settings Content -->
+            <div
+                style="flex: 1; padding: 40px; background: rgba(54, 57, 63, 0.9); overflow-y: auto; display: flex; flex-direction: column;">
+                <div id="settings-profile" class="settings-page">
+                    <h2>User Profile</h2>
+                    <p>Customize how you appear to others in the hub.</p>
+                    <div class="form-group">
+                        <label class="form-label">Display Nickname</label>
+                        <input type="text" class="form-input" id="settingsName" placeholder="What should we call you?">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Avatar URL</label>
+                        <input type="text" class="form-input" id="settingsAvatar"
+                            placeholder="Link to your profile picture (PNG/JPG/GIF)...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">About Me (Bio)</label>
+                        <textarea class="form-input" id="settingsBio" rows="4" style="resize: vertical;"
+                            placeholder="Tell us about yourself..."></textarea>
+                    </div>
+                </div>
+
+                <div id="settings-vibe" class="settings-page" style="display: none;">
+                    <h2>Visual Vibe</h2>
+                    <p>Make Vencoid look exactly how you want it.</p>
+                    <div class="form-group">
+                        <label class="form-label">Theme Primary Color</label>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="color" class="form-input" id="settingsColor"
+                                style="width: 60px; height: 40px; padding: 2px;" value="#5865f2">
+                            <span style="font-size: 12px; color: #72767d;">Changes buttons and accent highlights</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Chat Bubble Style</label>
+                        <select class="form-input" id="settingsBubbleStyle">
+                            <option value="modern">Vencoid Modern (Default)</option>
+                            <option value="classic">Classic Bubbles</option>
+                            <option value="minimal">Minimalist (No Border)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Chat Font Size</label>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="range" class="form-input" id="settingsFont" min="12" max="22" step="1"
+                                value="15" style="flex: 1;">
+                            <span id="fontVal" style="width: 30px; font-weight: 600;">15px</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Custom Background URL</label>
+                        <input type="text" class="form-input" id="settingsBg"
+                            placeholder="URL for chat area background image/GIF...">
+                    </div>
+                </div>
+
+                <div id="settings-privacy" class="settings-page" style="display: none;">
+                    <h2>Privacy & Safety</h2>
+                    <p>Control your visibility and accessibility.</p>
+                    <div class="form-group"
+                        style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px;">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Display Online Status</div>
+                            <div style="font-size: 12px; color: #b9bbbe;">Allows others to see when you are active.
+                            </div>
+                        </div>
+                        <input type="checkbox" id="settingsOnlineStatus" checked
+                            style="width: 20px; height: 20px; cursor: pointer;">
+                    </div>
+                    <div class="form-group"
+                        style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; margin-top: 12px;">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Show Message Timestamps</div>
+                            <div style="font-size: 12px; color: #b9bbbe;">Toggle visibility of the time next to
+                                messages.</div>
+                        </div>
+                        <input type="checkbox" id="settingsTimestamps" checked
+                            style="width: 20px; height: 20px; cursor: pointer;">
+                    </div>
+                    <div class="form-group"
+                        style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 8px; margin-top: 12px;">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Dynamic Sound Effects</div>
+                            <div style="font-size: 12px; color: #b9bbbe;">Play a subtle sound when a message arrives.
+                            </div>
+                        </div>
+                        <input type="checkbox" id="settingsSound" checked
+                            style="width: 20px; height: 20px; cursor: pointer;">
+                    </div>
+                </div>
+
+                <div id="settings-account" class="settings-page" style="display: none;">
+                    <h2 style="color: #ed4245;">Account Management</h2>
+                    <p>High-priority actions for your session and data.</p>
+                    <div class="form-group">
+                        <button class="btn btn-secondary"
+                            onclick="if(confirm('Reload app and clear memory?')) { localStorage.clear(); location.reload(); }"
+                            style="width: 100%; margin-bottom: 12px; text-align: left; padding: 12px;">🧹 Clear Cache &
+                            Refresh</button>
+                        <button class="btn btn-danger" onclick="deleteMyAccountSelf()"
+                            style="width: 100%; text-align: left; padding: 12px; background: rgba(237, 66, 69, 0.1); border: 1px solid #ed4245; color: #ed4245;">🗑️
+                            Delete My Account Permanently</button>
+                    </div>
+                    <div
+                        style="background: rgba(237, 66, 69, 0.05); padding: 15px; border-radius: 8px; border-left: 4px solid #ed4245; margin-top: 20px;">
+                        <strong style="color: #ed4245; font-size: 12px;">WARNING:</strong>
+                        <div style="font-size: 11px; color: #b9bbbe; margin-top: 4px;">Deleting your account is
+                            instantaneous and removes all associated data. You cannot undo this.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer"
+                    style="margin-top: auto; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="hideModal('settingsModal')"
+                        style="padding: 10px 24px; min-width: 100px;">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveAllSettings()"
+                        style="padding: 10px 24px; min-width: 150px; background: #3ba55c; border: none;">Save Hub
+                        Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="manageServerModal">
+        <div class="modal-content">
+            <div class="modal-header">⚙️ Manage Group Chat</div>
+            <div class="admin-section">
+                <div class="admin-section-title">GC Members & Admins</div>
+                <div id="gcAdminList" class="user-list">
+                    <div style="color: #72767d; text-align: center; padding: 20px;">Loading users...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideModal('manageServerModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAIzv7rOF5LtQmC1AVeQqAjrGHUZnJomFY",
+            authDomain: "track-study-9f2eb.firebaseapp.com",
+            projectId: "track-study-9f2eb",
+            storageBucket: "track-study-9f2eb.firebasestorage.app",
+            messagingSenderId: "461107985386",
+            appId: "1:461107985386:web:15c694a7c946da0a5d1093",
+            databaseURL: "https://track-study-9f2eb-default-rtdb.firebaseio.com"
+        };
+
+        let currentUser = null;
+        let currentServer = 'main';
+        let currentChannel = 'general';
+        let userRole = 'member';
+        let currentServerData = null; // New: Global variable for current server info
+        let messagesListener = null;
+        let isBanned = false;
+
+        // Initialize Firebase
+        if (firebaseConfig.apiKey) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Check authentication
+        function initApp() {
+            if (firebase.apps.length > 0) {
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUser = user;
+
+                        // Parse URL params for direct join
+                        const params = new URLSearchParams(window.location.search);
+                        if (params.has('server')) currentServer = params.get('server');
+                        if (params.has('channel')) currentChannel = params.get('channel');
+
+                        checkBanStatus();
+                    } else {
+                        showSignInRequired();
+                    }
+                });
+            } else {
+                console.warn('Firebase not configured. Please add your Firebase config.');
+                showSignInRequired();
+            }
+        }
+
+        function showSignInRequired() {
+            document.querySelector('.app').innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100vh; flex-direction: column; gap: 20px; text-align: center; background: #36393f;">
+                    <h1 style="font-size: 48px; color: #5865f2; margin-bottom: 0;">Vencoid</h1>
+                    <p style="font-size: 18px; color: #b9bbbe;">Welcome back! You must sign in to join the conversation.</p>
+                    <button class="btn btn-primary" onclick="googleLogin()" style="padding: 12px 24px; font-size: 16px; font-weight: 600;">
+                        Sign In with Google
+                    </button>
+                    <p style="font-size: 14px; color: #72767d; max-width: 400px;">
+                        Join our community to chat with others, share files, and more.
+                    </p>
+                </div>
+            `;
+        }
+
+        async function googleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await firebase.auth().signInWithPopup(provider);
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("Login failed. Please try again.");
+            }
+        }
+
+        function checkBanStatus() {
+            firebase.database().ref('banned/' + currentUser.uid).once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    isBanned = true;
+                    alert('You have been banned from this server.');
+                    document.getElementById('inputArea').style.display = 'none';
+                } else {
+                    isBanned = false;
+                    loadUserData();
+                }
+            });
+        }
+
+        function loadUserData() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('users/' + currentUser.uid).once('value', (snapshot) => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        userRole = userData.role || 'member';
+                        updateUserDisplay(userData.name || 'User');
+                        applyUserPreferences(userData.preferences);
+                    } else {
+                        const userName = 'User' + Math.floor(Math.random() * 9999);
+                        firebase.database().ref('users/' + currentUser.uid).set({
+                            name: userName,
+                            role: 'member',
+                            joinedAt: Date.now()
+                        });
+                        updateUserDisplay(userName);
+                    }
+                    loadServers();
+                    loadFriends();
+                    logActivity('joined', 'User joined the server');
+                });
+            } else {
+                updateUserDisplay('Guest User');
+                loadServers();
+            }
+        }
+
+        function updateUserDisplay(name) {
+            document.getElementById('userName').textContent = name;
+            const roleEl = document.getElementById('userRole');
+            if (userRole === 'admin') {
+                roleEl.innerHTML = '<span class="admin-badge">ADMIN</span>';
+            } else {
+                roleEl.textContent = userRole;
+            }
+
+            const avatarEl = document.getElementById('userAvatar');
+            if (currentUser && currentUser.photoURL) {
+                avatarEl.innerHTML = `<img src="${currentUser.photoURL}" style="width: 100%; height: 100%; border-radius: 50%;">`;
+            } else {
+                avatarEl.textContent = name[0].toUpperCase();
+            }
+        }
+
+        function loadServers() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('servers').on('value', (snapshot) => {
+                    const servers = snapshot.val() || {};
+                    renderServers(servers);
+                });
+            } else {
+                renderServers({ main: { name: 'Main Server', channels: { general: true, rules: true } } });
+            }
+        }
+
+        function renderServers(servers) {
+            const serverList = document.querySelector('.servers');
+            serverList.innerHTML = '<div class="server-icon active" onclick="switchServer(\'main\')" id="server-main">M</div>';
+
+            const isGlobalAdmin = userRole === 'admin';
+
+            Object.keys(servers).forEach(serverId => {
+                if (serverId !== 'main') {
+                    const server = servers[serverId];
+
+                    // Permission Check: Global Admin, Owner, or Member
+                    const isOwner = server.owner === currentUser.uid;
+                    const isMember = (server.members && server.members[currentUser.uid]) || (server.admins && server.admins[currentUser.uid]);
+
+                    if (isGlobalAdmin || isOwner || isMember) {
+                        const icon = document.createElement('div');
+                        icon.className = 'server-icon';
+                        icon.id = 'server-' + serverId;
+                        icon.textContent = server.name[0].toUpperCase();
+                        icon.onclick = () => switchServer(serverId);
+                        serverList.appendChild(icon);
+                    }
+                }
+            });
+
+            const addBtn = document.createElement('div');
+            addBtn.className = 'server-icon add';
+            addBtn.textContent = '+';
+            addBtn.onclick = showCreateServerModal;
+            serverList.appendChild(addBtn);
+
+            // If current server is not visible anymore, switch to main
+            const currentServerEl = document.getElementById('server-' + currentServer);
+            if (!currentServerEl && currentServer !== 'main') switchServer('main');
+        }
+
+        function switchServer(serverId) {
+            currentServer = serverId;
+            document.querySelectorAll('.server-icon').forEach(s => s.classList.remove('active'));
+            const serverEl = document.getElementById('server-' + serverId);
+            if (serverEl) serverEl.classList.add('active');
+            loadChannels();
+        }
+
+        function loadChannels() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('servers/' + currentServer).once('value', (snapshot) => {
+                    currentServerData = snapshot.val() || { name: 'Server', channels: { general: true } };
+                    document.getElementById('serverName').textContent = currentServerData.name.toUpperCase();
+                    renderChannels(currentServerData.channels || { general: true });
+                });
+            } else {
+                currentServerData = { name: 'MAIN SERVER', channels: { general: true, rules: true } };
+                document.getElementById('serverName').textContent = 'MAIN SERVER';
+                renderChannels(currentServerData.channels || { general: true });
+            }
+        }
+
+        function renderChannels(channels) {
+            const channelList = document.getElementById('channelList');
+            const isAdmin = userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid]);
+
+            const textChannels = Object.keys(channels).filter(c => c !== 'voice-chat');
+            const voiceChannels = Object.keys(channels).filter(c => c === 'voice-chat');
+
+            channelList.innerHTML = `
+                <div class="channel-category">Text Channels</div>
+                ${textChannels.map(channelId => `
+                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')">
+                        <span>${channels[channelId].locked ? '🔒' : '#'}</span>
+                        <span>${channelId}</span>
+                    </div>
+                `).join('')}
+                ${voiceChannels.length > 0 ? '<div class="channel-category">Voice Channels</div>' : ''}
+                ${voiceChannels.map(channelId => `
+                    <div class="channel ${currentChannel === channelId ? 'active' : ''}" onclick="switchChannel('${channelId}')">
+                        <span>🔊</span>
+                        <span>${channelId}</span>
+                    </div>
+                `).join('')}
+                ${isAdmin ? `
+                    <div class="channel" onclick="showCreateChannelModal()">
+                        <span>+</span>
+                        <span>Create Channel</span>
+                    </div>
+                ` : ''}
+            `;
+            switchChannel(currentChannel);
+        }
+
+        function switchChannel(channelId) {
+            currentChannel = channelId;
+            document.getElementById('channelName').textContent = channelId;
+            updateChatControls();
+            loadMessages();
+        }
+
+        function updateChatControls() {
+            const controls = document.getElementById('chatControls');
+            const isGlobalAdmin = userRole === 'admin';
+            const isGCOwner = currentServerData && currentServerData.owner === currentUser.uid;
+            const isGCAdmin = currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid];
+
+            if (isGlobalAdmin || isGCOwner || isGCAdmin) {
+                controls.innerHTML = `
+                    ${isGlobalAdmin ? '<button class="btn btn-primary" onclick="showAdminPanel()">🛡️ Global Admin</button>' : ''}
+                    ${(isGCOwner || isGCAdmin || isGlobalAdmin) ? '<button class="btn btn-primary" onclick="showManageServerModal()">⚙️ Manage GC</button>' : ''}
+                    <button class="btn btn-secondary" onclick="toggleLock()">🔒 Lock</button>
+                    ${(isGlobalAdmin || isGCOwner) ? '<button class="btn btn-danger" onclick="clearMessages()">Clear Chat</button>' : ''}
+                `;
+            } else {
+                controls.innerHTML = '';
+            }
+
+            checkChannelLock();
+        }
+
+        function checkChannelLock() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(`servers/${currentServer}/channels/${currentChannel}/locked`).once('value', (snapshot) => {
+                    const locked = snapshot.val();
+                    updateLockStatus(locked);
+                });
+            } else {
+                updateLockStatus(false);
+            }
+        }
+
+        function updateLockStatus(locked) {
+            const banner = document.getElementById('lockedBanner');
+            const inputArea = document.getElementById('inputArea');
+
+            if (isBanned) {
+                banner.innerHTML = '<div class="locked-banner">🚫 You are banned from this server.</div>';
+                inputArea.style.display = 'none';
+            } else if (locked && userRole !== 'admin') {
+                banner.innerHTML = '<div class="locked-banner">🔒 This channel is locked. Only admins can send messages.</div>';
+                inputArea.style.display = 'none';
+            } else if (currentChannel === 'rules' && currentServer === 'main' && userRole !== 'admin') {
+                banner.innerHTML = '<div class="locked-banner">⚠️ Only admins can post in this channel.</div>';
+                inputArea.style.display = 'none';
+            } else {
+                banner.innerHTML = '';
+                inputArea.style.display = 'block';
+            }
+        }
+
+        function loadMessages() {
+            if (messagesListener) {
+                messagesListener.off();
+            }
+
+            const path = `chat/${currentServer}/${currentChannel}`;
+
+            if (firebase.apps.length > 0) {
+                messagesListener = firebase.database().ref(path).limitToLast(20);
+                messagesListener.on('value', (snapshot) => {
+                    const messages = snapshot.val() || {};
+                    renderMessages(messages);
+                });
+            } else {
+                renderMessages({});
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messages');
+            const msgArray = Object.entries(messages).map(([id, msg]) => ({ id, ...msg }));
+
+            container.innerHTML = msgArray.map(msg => `
+                <div class="message">
+                    <div class="message-avatar">
+                        ${msg.userAvatar ? `<img src="${msg.userAvatar}" style="width: 100%; height: 100%; border-radius: 50%;">` : (msg.userName ? msg.userName[0].toUpperCase() : 'U')}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">${msg.userName || 'User'}</span>
+                            <span class="message-time">${new Date(msg.timestamp).toLocaleTimeString()}</span>
+                        </div>
+                        ${msg.text ? `<div class="message-text">${escapeHtml(msg.text)}</div>` : ''}
+                        ${msg.file ? `
+                            <a href="${msg.file.url}" target="_blank" class="message-file" style="text-decoration: none; color: inherit;">
+                                📎 ${escapeHtml(msg.file.name)} (${Math.round(msg.file.size / 1024)}KB)
+                            </a>
+                        ` : ''}
+                    </div>
+                    ${(userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid])) ? `
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="deleteMessage('${msg.id}')" title="Delete">🗑️</button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sendMessage() {
+            if (isBanned) {
+                alert('You are banned and cannot send messages.');
+                return;
+            }
+
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (!text || text.length > 2000) return;
+
+            const path = `chat/${currentServer}/${currentChannel}`;
+            const userName = document.getElementById('userName').textContent;
+            const message = {
+                text: text,
+                userId: currentUser.uid,
+                userName: userName,
+                userAvatar: currentUser.photoURL || '',
+                timestamp: Date.now()
+            };
+
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(path).push(message);
+                logActivity('message', `Sent message in #${currentChannel}`);
+            }
+
+            input.value = '';
+            input.style.height = 'auto';
+            updateCharCount();
+        }
+
+        function deleteMessage(msgId) {
+            if (confirm('Delete this message?')) {
+                const path = 'chat/' + currentServer + '/' + currentChannel + '/' + msgId;
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref(path).remove();
+                    logActivity('delete', 'Deleted message in #' + currentChannel);
+                }
+            }
+        }
+
+        function clearMessages() {
+            if (confirm('Clear all messages in this channel?')) {
+                const path = 'chat/' + currentServer + '/' + currentChannel;
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref(path).remove();
+                    logActivity('clear', 'Cleared all messages in #' + currentChannel);
+                }
+            }
+        }
+
+        function toggleLock() {
+            const path = 'servers/' + currentServer + '/channels/' + currentChannel + '/locked';
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(path).once('value', (snapshot) => {
+                    const newState = !snapshot.val();
+                    firebase.database().ref(path).set(newState);
+                    logActivity('lock', (newState ? 'Locked' : 'Unlocked') + ' #' + currentChannel);
+                    checkChannelLock();
+                });
+            }
+        }
+
+        function updateCharCount() {
+            const input = document.getElementById('messageInput');
+            document.getElementById('charCount').textContent = input.value.length;
+        }
+
+        function showCreateServerModal() {
+            document.getElementById('createServerModal').classList.add('show');
+        }
+
+        function showCreateChannelModal() {
+            document.getElementById('createChannelModal').classList.add('show');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function createServer() {
+            const name = document.getElementById('newServerName').value.trim();
+            if (!name) return;
+
+            const serverId = name.toLowerCase().replace(/\s+/g, '-');
+
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('servers/' + serverId).set({
+                    name: name,
+                    channels: { general: true },
+                    owner: currentUser.uid
+                });
+                logActivity('create_server', `Created server: ${name}`);
+            }
+
+            hideModal('createServerModal');
+            document.getElementById('newServerName').value = '';
+        }
+
+        function createChannel() {
+            const isAuthorized = userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid]);
+            if (!isAuthorized) {
+                alert("You don't have permission to create channels here.");
+                return;
+            }
+
+            const name = document.getElementById('newChannelName').value.trim();
+            if (!name) return;
+
+            const channelId = name.toLowerCase().replace(/\s+/g, '-');
+
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('servers/' + currentServer + '/channels/' + channelId).set(true);
+                logActivity('create_channel', 'Created channel: #' + channelId);
+            }
+
+            hideModal('createChannelModal');
+            document.getElementById('newChannelName').value = '';
+            loadChannels();
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminPanelModal').classList.add('show');
+            loadUserList();
+            loadActivityLog();
+        }
+
+        function loadUserList() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('users').once('value', (snapshot) => {
+                    const users = snapshot.val() || {};
+                    firebase.database().ref('banned').once('value', (bannedSnapshot) => {
+                        const banned = bannedSnapshot.val() || {};
+                        renderUserList(users, banned);
+                    });
+                });
+            }
+        }
+
+        function renderUserList(users, banned) {
+            const userList = document.getElementById('userList');
+            const userArray = Object.entries(users).map(([uid, data]) => ({ uid, ...data, banned: !!banned[uid] }));
+
+            userList.innerHTML = userArray.map(user => `
+                <div class="user-item">
+                    <div class="user-item-info">
+                        <div class="user-item-avatar">${user.name ? user.name[0].toUpperCase() : 'U'}</div>
+                        <div>
+                            <div style="font-weight: 600;">${user.name || 'User'}</div>
+                            <div style="font-size: 12px; color: #72767d;">
+                                ${user.role === 'admin' ? '<span class="admin-badge">ADMIN</span>' : user.role || 'member'}
+                                ${user.banned ? ' <span class="banned-badge">BANNED</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-item-actions">
+                        ${user.uid !== currentUser.uid ? `
+                            <button class="btn btn-primary" onclick="forceAddUserToGC('${user.uid}', '${user.name || 'User'}')" title="Force Add to this GC">🚪+</button>
+                            <button class="btn ${user.banned ? 'btn-primary' : 'btn-danger'}" onclick="${user.banned ? 'unbanUser' : 'banUser'}('${user.uid}', '${user.name || 'User'}')">
+                                ${user.banned ? 'Unban' : 'Ban'}
+                            </button>
+                            <button class="btn ${user.role === 'admin' ? 'btn-secondary' : 'btn-primary'}" onclick="setUserRole('${user.uid}', '${user.role === 'admin' ? 'member' : 'admin'}', '${user.name || 'User'}')" title="Change Role">
+                                ${user.role === 'admin' ? 'Demote' : 'Make Admin'}
+                            </button>
+                            <button class="btn btn-primary" onclick="addFriend('${user.uid}', '${user.name || 'User'}')" title="Add Friend">👤+</button>
+                            <button class="btn btn-danger" onclick="deleteUserAccount('${user.uid}', '${user.name || 'User'}')" title="Delete Account">🗑️</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function banUser(uid, name) {
+            if (confirm('Ban ' + name + '? They will not be able to send messages.')) {
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref('banned/' + uid).set({
+                        bannedAt: Date.now(),
+                        bannedBy: currentUser.uid
+                    });
+                    logActivity('ban', 'Banned user: ' + name);
+                    loadUserList();
+                }
+            }
+        }
+
+        function unbanUser(uid, name) {
+            if (confirm('Unban ' + name + '?')) {
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref('banned/' + uid).remove();
+                    logActivity('unban', 'Unbanned user: ' + name);
+                    loadUserList();
+                }
+            }
+        }
+
+        function setUserRole(uid, newRole, name) {
+            const action = newRole === 'admin' ? 'promote' : 'demote';
+            if (confirm(`Are you sure you want to ${action} ${name} to ${newRole}?`)) {
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref(`users/${uid}/role`).set(newRole).then(() => {
+                        logActivity('role_change', `${action.charAt(0).toUpperCase() + action.slice(1)}d user: ${name} to ${newRole}`);
+                        loadUserList();
+                    });
+                }
+            }
+        }
+
+        function forceAddUserToGC(uid, name) {
+            if (currentServer === 'main') {
+                alert('Everyone is already in the main server!');
+                return;
+            }
+            if (confirm(`Force add ${name} to the current group chat (${currentServerData.name})?`)) {
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref(`servers/${currentServer}/members/${uid}`).set(true).then(() => {
+                        logActivity('force_add', `Admin force-added ${name} to ${currentServerData.name}`);
+                        alert(`${name} has been added.`);
+                        loadUserList();
+                    });
+                }
+            }
+        }
+
+        function deleteUserAccount(uid, name) {
+            if (confirm(`Are you sure you want to PERMANENTLY delete the account for ${name}? This action cannot be undone.`)) {
+                if (firebase.apps.length > 0) {
+                    firebase.database().ref('users/' + uid).remove();
+                    firebase.database().ref('banned/' + uid).remove(); // Just in case
+                    logActivity('delete_account', 'Deleted user account: ' + name);
+                    loadUserList();
+                }
+            }
+        }
+
+        function loadActivityLog() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('activity').orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
+                    const activities = snapshot.val() || {};
+                    renderActivityLog(activities);
+                });
+            }
+        }
+
+        function renderActivityLog(activities) {
+            const activityLog = document.getElementById('activityLog');
+            const activityArray = Object.entries(activities)
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => b.timestamp - a.timestamp);
+
+            if (activityArray.length === 0) {
+                activityLog.innerHTML = '<div style="color: #72767d; text-align: center; padding: 20px;">No activity yet</div>';
+                return;
+            }
+
+            activityLog.innerHTML = activityArray.map(activity => `
+                <div class="activity-item">
+                    <div><strong>${activity.userName || 'User'}</strong> - ${activity.action}</div>
+                    <div class="activity-time">${new Date(activity.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function logActivity(type, action) {
+            if (firebase.apps.length > 0 && currentUser) {
+                firebase.database().ref('activity').push({
+                    userId: currentUser.uid,
+                    userName: document.getElementById('userName').textContent,
+                    type: type,
+                    action: action,
+                    timestamp: Date.now(),
+                    server: currentServer,
+                    channel: currentChannel
+                });
+            }
+        }
+
+        // Event listeners
+        const messageInput = document.getElementById('messageInput');
+        messageInput.addEventListener('input', () => {
+            updateCharCount();
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        });
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file || isBanned) return;
+
+            // Optional: Limit file size (e.g., 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File is too large. Maximum size is 5MB.');
+                return;
+            }
+
+            const path = 'chat/' + currentServer + '/' + currentChannel;
+            const storagePath = 'chat_files/' + Date.now() + '_' + file.name;
+
+            try {
+                if (firebase.apps.length > 0) {
+                    const storageRef = firebase.storage().ref(storagePath);
+                    const snapshot = await storageRef.put(file);
+                    const downloadURL = await snapshot.ref.getDownloadURL();
+
+                    const message = {
+                        file: {
+                            name: file.name,
+                            size: file.size,
+                            type: file.type,
+                            url: downloadURL
+                        },
+                        userId: currentUser.uid,
+                        userName: document.getElementById('userName').textContent,
+                        userAvatar: currentUser.photoURL || '',
+                        timestamp: Date.now()
+                    };
+
+                    firebase.database().ref(path).push(message);
+                    logActivity('file', 'Uploaded file: ' + file.name);
+                }
+            } catch (error) {
+                console.error("File upload failed:", error);
+                alert("Failed to upload file.");
+            }
+
+            e.target.value = '';
+        });
+
+        function goMainHub() {
+            const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+            const isFree = sessionStorage.getItem('freeAccess') === 'true';
+            if (isAdmin) window.location.href = 'games.html?admin=True';
+            else if (isFree) window.location.href = 'games.html?free=True';
+            else window.location.href = 'games.html';
+        }
+
+        function copyInviteLink() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('server', currentServer);
+            url.searchParams.set('channel', currentChannel);
+
+            navigator.clipboard.writeText(url.toString()).then(() => {
+                alert('Invite link copied to clipboard!');
+            }).catch(err => {
+                console.error('Text not copied', err);
+            });
+        }
+
+        function addFriend(uid, name) {
+            if (uid === currentUser.uid) return;
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(`friends/${currentUser.uid}/${uid}`).set({
+                    name: name,
+                    addedAt: Date.now()
+                }).then(() => {
+                    alert('Friend added!');
+                    loadFriends();
+                });
+            }
+        }
+
+        function loadFriends() {
+            if (firebase.apps.length > 0 && currentUser) {
+                firebase.database().ref(`friends/${currentUser.uid}`).on('value', (snapshot) => {
+                    const friends = snapshot.val() || {};
+                    renderFriends(friends);
+                });
+            }
+        }
+
+        function renderFriends(friends) {
+            const container = document.getElementById('friendsList');
+            const friendArray = Object.entries(friends).map(([uid, data]) => ({ uid, ...data }));
+
+            if (friendArray.length === 0) {
+                container.innerHTML = '<div style="color: #72767d; font-size: 12px; text-align: center;">No friends yet</div>';
+                return;
+            }
+
+            container.innerHTML = friendArray.map(friend => `
+                <div class="channel" style="font-size: 14px; padding: 4px 8px;">
+                    <div class="user-avatar" style="width: 20px; height: 20px; font-size: 10px;">${friend.name[0].toUpperCase()}</div>
+                    <span>${friend.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function switchSettingTab(tabId) {
+            document.querySelectorAll('.settings-page').forEach(p => p.style.display = 'none');
+            document.querySelectorAll('.setting-tab').forEach(t => {
+                t.classList.remove('active');
+                t.style.color = '#b9bbbe';
+                t.style.background = 'transparent';
+                t.style.fontWeight = 'normal';
+            });
+
+            document.getElementById('settings-' + tabId).style.display = 'block';
+            const activeTab = document.getElementById('tab-' + tabId);
+            activeTab.classList.add('active');
+            activeTab.style.color = '#fff';
+            activeTab.style.background = 'rgba(79, 84, 92, 0.3)';
+            activeTab.style.fontWeight = '600';
+        }
+
+        function showSettingsModal() {
+            if (!currentUser) return;
+
+            firebase.database().ref(`users/${currentUser.uid}`).once('value', snap => {
+                const data = snap.val() || {};
+                document.getElementById('settingsName').value = data.name || '';
+                document.getElementById('settingsAvatar').value = data.icon || '';
+                document.getElementById('settingsBio').value = data.bio || '';
+
+                const prefs = data.preferences || {};
+                document.getElementById('settingsColor').value = prefs.themeColor || '#5865f2';
+                document.getElementById('settingsBg').value = prefs.bgUrl || '';
+                document.getElementById('settingsBubbleStyle').value = prefs.bubbleStyle || 'modern';
+                document.getElementById('settingsFont').value = prefs.fontSize || 15;
+                document.getElementById('fontVal').textContent = (prefs.fontSize || 15) + 'px';
+                document.getElementById('settingsOnlineStatus').checked = prefs.showOnline !== false;
+                document.getElementById('settingsTimestamps').checked = prefs.showTimestamps !== false;
+                document.getElementById('settingsSound').checked = prefs.soundEnabled !== false;
+
+                switchSettingTab('profile');
+                document.getElementById('settingsModal').classList.add('show');
+            });
+        }
+
+        // Font range listener
+        document.getElementById('settingsFont').oninput = e => {
+            document.getElementById('fontVal').textContent = e.target.value + 'px';
+        };
+
+        function saveAllSettings() {
+            const updates = {
+                name: document.getElementById('settingsName').value.trim(),
+                icon: document.getElementById('settingsAvatar').value.trim(),
+                bio: document.getElementById('settingsBio').value.trim(),
+                preferences: {
+                    themeColor: document.getElementById('settingsColor').value,
+                    bgUrl: document.getElementById('settingsBg').value.trim(),
+                    bubbleStyle: document.getElementById('settingsBubbleStyle').value,
+                    fontSize: parseInt(document.getElementById('settingsFont').value),
+                    showOnline: document.getElementById('settingsOnlineStatus').checked,
+                    showTimestamps: document.getElementById('settingsTimestamps').checked,
+                    soundEnabled: document.getElementById('settingsSound').checked
+                }
+            };
+
+            if (firebase.apps.length > 0) {
+                firebase.database().ref(`users/${currentUser.uid}`).update(updates).then(() => {
+                    updateUserDisplay(updates.name);
+                    applyUserPreferences(updates.preferences);
+                    hideModal('settingsModal');
+                    alert('Settings updated successfully!');
+                    logActivity('settings', 'Updated hub preferences');
+                });
+            }
+        }
+
+        function applyUserPreferences(prefs) {
+            if (!prefs) return;
+            // Apply theme color
+            document.querySelectorAll('.btn-primary').forEach(b => b.style.background = prefs.themeColor);
+            const msgArea = document.getElementById('messages');
+            msgArea.style.fontSize = prefs.fontSize + 'px';
+
+            // Custom Background
+            if (prefs.bgUrl) {
+                msgArea.style.backgroundImage = `url('${prefs.bgUrl}')`;
+                msgArea.style.backgroundSize = 'cover';
+                msgArea.style.backgroundPosition = 'center';
+            } else {
+                msgArea.style.backgroundImage = 'none';
+            }
+
+            // Timestamps
+            const styleId = 'user-timestamp-style';
+            let styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = styleId;
+                document.head.appendChild(styleEl);
+            }
+            styleEl.innerHTML = prefs.showTimestamps === false ? '.message-time { display: none !important; }' : '';
+        }
+
+        function deleteMyAccountSelf() {
+            if (confirm('CRITICAL: Are you 100% sure? This will PERMANENTLY delete your account and all data. There is no undo.')) {
+                firebase.database().ref(`users/${currentUser.uid}`).remove().then(() => {
+                    firebase.auth().signOut();
+                    alert('Account deleted. Redirecting...');
+                    location.reload();
+                });
+            }
+        }
+
+        function showManageServerModal() {
+            const isAuthorized = userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid) || (currentServerData && currentServerData.admins && currentServerData.admins[currentUser.uid]);
+            if (!currentServerData || !isAuthorized) return;
+            document.getElementById('manageServerModal').classList.add('show');
+            loadGCUserList();
+        }
+
+        function loadGCUserList() {
+            if (firebase.apps.length > 0) {
+                firebase.database().ref('users').once('value', (snapshot) => {
+                    const allUsers = snapshot.val() || {};
+                    renderGCUserList(allUsers);
+                });
+            }
+        }
+
+        function renderGCUserList(users) {
+            const container = document.getElementById('gcAdminList');
+            const serverAdmins = currentServerData.admins || {};
+
+            // Filter to show users who are not the owner
+            const userArray = Object.entries(users)
+                .map(([uid, data]) => ({ uid, ...data }))
+                .filter(u => u.uid !== currentServerData.owner);
+
+            container.innerHTML = userArray.map(user => {
+                const isGCAdmin = !!serverAdmins[user.uid];
+                const isGCMember = currentServerData.members && currentServerData.members[user.uid];
+                const canManageAdmins = userRole === 'admin' || (currentServerData && currentServerData.owner === currentUser.uid);
+
+                return `
+                    <div class="user-item">
+                        <div class="user-item-info">
+                            <div class="user-item-avatar">${user.name ? user.name[0].toUpperCase() : 'U'}</div>
+                            <div>
+                                <div style="font-weight: 600;">${user.name || 'User'}</div>
+                                <div style="font-size: 12px; color: #72767d;">${isGCAdmin ? 'GC ADMIN' : (isGCMember ? 'Member' : 'Not in GC')}</div>
+                            </div>
+                        </div>
+                        <div class="user-item-actions">
+                            ${!isGCMember ? `<button class="btn btn-primary" onclick="toggleGCMember('${user.uid}', false, '${user.name || 'User'}')">Add to GC</button>` : ''}
+                            ${canManageAdmins ? `
+                                <button class="btn ${isGCAdmin ? 'btn-danger' : 'btn-primary'}" onclick="toggleGCAdmin('${user.uid}', ${isGCAdmin})">
+                                    ${isGCAdmin ? 'Remove Admin' : 'Make GC Admin'}
+                                </button>
+                            ` : ''}
+                            ${isGCMember ? `<button class="btn btn-danger" onclick="toggleGCMember('${user.uid}', true, '${user.name || 'User'}')">Kick</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleGCAdmin(uid, isCurrentlyAdmin) {
+            if (firebase.apps.length > 0) {
+                const path = `servers/${currentServer}/admins/${uid}`;
+                if (isCurrentlyAdmin) {
+                    firebase.database().ref(path).remove().then(() => {
+                        currentServerData.admins = currentServerData.admins || {};
+                        delete currentServerData.admins[uid];
+                        loadGCUserList();
+                        logActivity('gc_mod', `Removed GC admin: ${uid}`);
+                    });
+                } else {
+                    firebase.database().ref(path).set(true).then(() => {
+                        currentServerData.admins = currentServerData.admins || {};
+                        currentServerData.admins[uid] = true;
+                        loadGCUserList();
+                        logActivity('gc_mod', `Added GC admin: ${uid}`);
+                    });
+                }
+            }
+        }
+
+        function toggleGCMember(uid, isCurrentlyMember, name) {
+            const verb = isCurrentlyMember ? 'kick' : 'add';
+            if (confirm(`Are you sure you want to ${verb} ${name}?`)) {
+                if (firebase.apps.length > 0) {
+                    const path = `servers/${currentServer}/members/${uid}`;
+                    if (isCurrentlyMember) {
+                        firebase.database().ref(path).remove().then(() => {
+                            logActivity('gc_kick', `Kicked ${name} from GC`);
+                            loadGCUserList();
+                        });
+                    } else {
+                        firebase.database().ref(path).set(true).then(() => {
+                            logActivity('gc_add', `Added ${name} to GC`);
+                            loadGCUserList();
+                        });
+                    }
+                }
+            }
+        }
+
+        // Initialize app
+        initApp();
+    </script>
+</body>
+
+</html>

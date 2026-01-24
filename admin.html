@@ -49,11 +49,11 @@
     }
 
     #adminApp {
-      max-width: 800px;
-      margin: 30px auto;
+      width: 100%;
+      margin: 20px 0;
       background: #161b22;
       padding: 20px 25px;
-      border-radius: 12px;
+      border-radius: 0;
       box-shadow: 0 15px 40px #0008;
     }
 
@@ -154,6 +154,19 @@
       padding: 50px;
     }
 
+    .modal-content {
+      background: rgba(54, 57, 63, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 24px;
+      width: 95%;
+      max-width: none;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
     #not-admin {
       text-align: center;
       color: #da3633;
@@ -161,7 +174,6 @@
       padding: 40px;
       border-radius: 12px;
       border: 1px solid #30363d;
-      max-width: 600px;
       margin: 100px auto;
     }
 

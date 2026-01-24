@@ -56,11 +56,11 @@
     }
 
     #adminApp {
-      max-width: 1500px;
-      margin: 30px auto;
+      width: 100%;
+      margin: 20px 0;
       background: #161b22;
       padding: 20px 25px;
-      border-radius: 12px;
+      border-radius: 0;
       box-shadow: 0 15px 40px #0008;
     }
 
@@ -175,6 +175,8 @@
 
     </div>
     <div id="nav-right">
+      <button onclick="window.location.href='./games.html?admin=True'"
+        style="background: transparent; border: 1px solid #58a6ff; color: #58a6ff; padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 15px;">Exit</button>
       <img src="images/panic.png" alt="Panic" title="Panic Button"
         onclick="window.location.href='https://classroom.google.com'">
       <img src="images/chat.png" alt="Chat" title="Chat"
@@ -204,6 +206,14 @@
       </thead>
       <tbody id="adminTable"></tbody>
     </table>
+
+    <div style="margin-top: 40px;">
+      <h2 style="color: #c9d1d9; margin-bottom: 15px;">Recent Activity Logs (Last 10)</h2>
+      <div id="activityLog"
+        style="background: #0e1117; border: 1px solid #30363d; border-radius: 8px; padding: 15px; max-height: 400px; overflow-y: auto;">
+        <div style="color: #72767d; text-align: center;">Loading activity...</div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -241,6 +251,32 @@
       renderTable();
     });
 
+    function loadActivityLog() {
+      firebase.database().ref('activity').orderByChild('timestamp').limitToLast(10).on('value', snap => {
+        const activities = snap.val() || {};
+        const logContainer = document.getElementById("activityLog");
+        const activityArray = Object.entries(activities)
+          .map(([id, data]) => ({ id, ...data }))
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (activityArray.length === 0) {
+          logContainer.innerHTML = '<div style="color: #72767d; text-align: center;">No activity yet</div>';
+          return;
+        }
+
+        logContainer.innerHTML = activityArray.map(activity => `
+          <div style="padding: 10px; border-bottom: 1px solid #30363d; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <strong style="color: #58a6ff;">${activity.userName || 'User'}</strong>
+              <small style="color: #72767d;">${new Date(activity.timestamp).toLocaleString()}</small>
+            </div>
+            <div style="color: #c9d1d9;">${activity.action}</div>
+          </div>
+        `).join('');
+      });
+    }
+    loadActivityLog();
+
     search.oninput = renderTable;
 
     /* ===== RENDER TABLE ===== */
@@ -277,6 +313,8 @@
           <button class="danger" data-action="ban" data-uid="${uid}" ${isOwner ? "disabled" : ""}>Ban</button>
           <button class="normal" data-action="unban" data-uid="${uid}" ${isOwner ? "disabled" : ""}>Unban</button>
           <button class="normal" data-action="admin" data-uid="${uid}" ${isOwner ? "disabled" : ""}>Make Admin</button>
+          <button class="danger" data-action="delete" data-uid="${uid}" ${isOwner ? "disabled" : ""}>Delete Account</button>
+          <button class="danger" data-action="clearUserMsgs" data-uid="${uid}" ${isOwner ? "disabled" : ""}>Clear Messages</button>
         </td>
       `;
           table.appendChild(row);
@@ -294,10 +332,40 @@
 
       if (OWNER_EMAIL.includes((user.email || "").toLowerCase())) return;
 
-      if (btn.dataset.action === "ban") editUserProp(uid, "role", "blocked");
-      if (btn.dataset.action === "unban") editUserProp(uid, "role", "user");
+      if (btn.dataset.action === "ban") {
+        editUserProp(uid, "role", "blocked");
+        firebase.database().ref('banned/' + uid).set({ bannedAt: Date.now(), bannedBy: 'Admin' });
+      }
+      if (btn.dataset.action === "unban") {
+        editUserProp(uid, "role", "user");
+        firebase.database().ref('banned/' + uid).remove();
+      }
       if (btn.dataset.action === "admin") editUserProp(uid, "role", "admin");
       if (btn.dataset.action === "leaderboard") editUserProp(uid, "banned", !user.banned);
+      if (btn.dataset.action === "delete") {
+        if (confirm(`Are you sure you want to PERMANENTLY delete the account for ${user.email}? This cannot be undone.`)) {
+          firebase.database().ref("users/" + uid).remove();
+          firebase.database().ref("banned/" + uid).remove();
+        }
+      }
+      if (btn.dataset.action === "clearUserMsgs") {
+        if (confirm(`Clear ALL messages sent by ${user.name || user.email} across all channels?`)) {
+          firebase.database().ref('chat').once('value', snap => {
+            const servers = snap.val() || {};
+            Object.keys(servers).forEach(server => {
+              Object.keys(servers[server]).forEach(channel => {
+                const msgs = servers[server][channel];
+                Object.keys(msgs).forEach(msgId => {
+                  if (msgs[msgId].userId === uid) {
+                    firebase.database().ref(`chat/${server}/${channel}/${msgId}`).remove();
+                  }
+                });
+              });
+            });
+            alert("Messages cleared!");
+          });
+        }
+      }
     };
   </script>
 
