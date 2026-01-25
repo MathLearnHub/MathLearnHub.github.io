@@ -1510,9 +1510,9 @@
             <button class="voice-btn hangup" onclick="endCall()" title="End Call">📞</button>
         </div>
         <video id="remoteVideo" autoplay playsinline
-            style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;"></video>
+            style="display: none; max-width: 90%; max-height: 70vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2; object-fit: contain;"></video>
         <img id="remoteScreenImg"
-            style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;">
+            style="display: none; max-width: 90%; max-height: 70vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2; object-fit: contain;">
     </div>
 
     <script>
@@ -3640,9 +3640,9 @@
                         screenShareInterval = setInterval(() => {
                             if (!isScreenSharing) return;
                             const ctx = screenShareCanvas.getContext('2d');
-                            screenShareCanvas.width = 854;
+                            screenShareCanvas.width = 840;
                             screenShareCanvas.height = 480;
-                            ctx.drawImage(video, 0, 0, 640, 360);
+                            ctx.drawImage(video, 0, 0, 840, 480);
                             const base64Frame = screenShareCanvas.toDataURL('image/jpeg', 0.4);
                             channel.publish(`screen:${currentUser.uid}`, base64Frame);
                         }, 250);
