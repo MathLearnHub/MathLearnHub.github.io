@@ -1545,6 +1545,7 @@
         let currentCallFriend = null;
         let callSignalListener = null;
         let pendingIceCandidates = []; // Buffer for ICE candidates that arrive before remote description
+        let screenShareInterval = null;
 
         // Firebase Audio Streaming Variables (Blocksi workaround)
         let audioContext = null;
@@ -3487,6 +3488,10 @@
             isAudioStreaming = false;
             isScreenSharing = false;
             clearInterval(screenShareInterval);
+            if (streamingInterval) {
+                clearInterval(streamingInterval);
+                streamingInterval = null;
+            }
 
             // Listener Cleanup
             if (callSignalListener) {
@@ -3678,8 +3683,16 @@
                     }
                 };
 
-                mediaRecorder.start(150);
+                mediaRecorder.start();
                 isAudioStreaming = true;
+
+                if (streamingInterval) clearInterval(streamingInterval);
+                streamingInterval = setInterval(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        mediaRecorder.start();
+                    }
+                }, 500);
 
                 const channel = ably.channels.get(`call:${currentUser.uid}`);
                 channel.subscribe(`audio:${friendUid}`, (message) => {
@@ -3689,6 +3702,10 @@
 
                 showCallOverlay(friendName, 'Connected (Ably)');
                 listenToAblySignals(friendUid);
+
+                // Send answer signal back to caller so their UI updates
+                const callerChannel = ably.channels.get(`call:${friendUid}`);
+                callerChannel.publish(`signal:${currentUser.uid}`, { type: 'ably_answer' });
 
             } catch (err) {
                 console.error('Answer Ably failed:', err);
@@ -3749,8 +3766,16 @@
                     }
                 };
 
-                mediaRecorder.start(150); // Small chunks for low latency
+                mediaRecorder.start(); // Start recording
                 isAudioStreaming = true;
+
+                if (streamingInterval) clearInterval(streamingInterval);
+                streamingInterval = setInterval(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        mediaRecorder.start();
+                    }
+                }, 500);
 
                 // Subscribe to incoming audio from this friend
                 const channel = ably.channels.get(`call:${currentUser.uid}`);
@@ -3783,6 +3808,7 @@
         async function playAblyAudioChunk(base64Data) {
             try {
                 if (!ablyAudioContext) ablyAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+                if (ablyAudioContext.state === 'suspended') await ablyAudioContext.resume();
 
                 const binaryString = atob(base64Data);
                 const bytes = new Uint8Array(binaryString.length);
@@ -3804,10 +3830,12 @@
             channel.subscribe(`signal:${friendUid}`, (message) => {
                 const signal = message.data;
                 if (signal.type === 'hangup') {
-                    endAblyCall();
+                    endCall();
+                } else if (signal.type === 'ably_answer') {
+                    document.getElementById('callStatus').textContent = 'Connected (Ably)';
                 } else if (signal.type === 'screen_start') {
                     showAblyScreen(friendUid);
-                } else if (signal.type === 'screen_stop') {
+                } else if (signal.type === 'screen_stop' || signal.type === 'screen_end') {
                     hideAblyScreen();
                 }
             });
@@ -3847,8 +3875,17 @@
                 };
 
                 // Start recording in 100ms chunks
-                mediaRecorder.start(100);
+                // Start recording
+                mediaRecorder.start();
                 isAudioStreaming = true;
+
+                if (streamingInterval) clearInterval(streamingInterval);
+                streamingInterval = setInterval(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        mediaRecorder.start();
+                    }
+                }, 500);
 
                 // Show call UI
                 showCallOverlay(friendName, 'Streaming...');
@@ -3869,7 +3906,7 @@
             } catch (err) {
                 console.error('Firebase audio call failed:', err);
                 alert('Could not start audio streaming. Please allow microphone access.');
-                endFirebaseAudioCall();
+                endCall();
             }
         }
 
@@ -3907,6 +3944,7 @@
                 if (!audioContext) {
                     audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 }
+                if (audioContext.state === 'suspended') await audioContext.resume();
 
                 // Convert base64 to ArrayBuffer
                 const binaryString = atob(base64Data);
