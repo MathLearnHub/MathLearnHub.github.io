@@ -40,6 +40,7 @@ function deleteUserProp(uid, key) {
   return db.ref(`users/${uid}/${key}`).remove();
 }
 
+
 //Timespent
 //online
 
@@ -162,4 +163,3 @@ window.deleteUserProp = deleteUserProp;
 window.trackUserOnlineStatus = trackUserOnlineStatus;
 window.trackUser = trackUser;
 window.onUserChange = onUserChange;
-

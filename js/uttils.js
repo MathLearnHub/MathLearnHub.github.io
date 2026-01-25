@@ -95,6 +95,11 @@ function onUserChange(cb) {
   });
 }
 
+function deleteProp(key) {
+  if (!db) return console.error("DB not init");
+  return db.ref(`${key}`).remove();
+}
+
 window.getPeopleCount = function() {
   const onlineRef = db.ref("users").orderByChild("online").equalTo(true);
   onlineRef.on("value", snap => {
@@ -112,6 +117,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+async function getSubfolderCountRTDB(folderPath) {
+  try {
+    const snapshot = await firebase.database().ref(folderPath).once('value');
+    return snapshot.numChildren();
+  } catch (error) {
+    console.error("Error fetching RTDB count:", error);
+    return 0;
+  }
+}
+
+// Example Usage:
+
+
+
 const defaultUserSchema = { "created": () => Date.now(), "email": "", "icon": "", "online": false, "role": "", "timeSpent": 0, "banned": false, "name": "" };
 
 
@@ -120,3 +139,5 @@ window.checkifinadmin = checkifinadmin;
 window.ensureUserSchema = ensureUserSchema;
 window.fetchPasswords = fetchPasswords;
 window.onUserChange = onUserChange;
+window.getSubfolderCountRTDB = getSubfolderCountRTDB;
+window.deleteProp = deleteProp;
