@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 
     <script src="js/configstuff.js"></script>
     <script src="js/user.js"></script>
@@ -1205,6 +1206,16 @@
                     <h2>Voice & Video</h2>
                     <p>Configure your call and screen share settings.</p>
                     <div class="form-group">
+                        <label class="form-label">Call Method</label>
+                        <select class="form-input" id="settingsCallMethod">
+                            <option value="ably">Ably (Recommended - Non-WebRTC)</option>
+                            <option value="webrtc">WebRTC (Direct P2P - May be blocked)</option>
+                            <option value="firebase">Firebase (Legacy Fallback)</option>
+                        </select>
+                        <div style="font-size: 11px; color: #72767d; margin-top: 4px;">Ably is recommended for school
+                            networks as it bypasses WebRTC blocks.</div>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Input Volume</label>
                         <div style="display: flex; align-items: center; gap: 15px;">
                             <input type="range" class="form-input" id="settingsInputVol" min="0" max="100" step="5"
@@ -1493,17 +1504,15 @@
         <div class="voice-call-name" id="callName">Calling...</div>
         <div class="voice-call-status" id="callStatus">Connecting...</div>
         <div class="voice-call-controls">
-            <button class="voice-btn mute" id="muteBtn"
-                onclick="if(useFirebaseAudio || isAudioStreaming) toggleMuteFirebase(); else toggleMute();"
-                title="Mute">🎤</button>
+            <button class="voice-btn mute" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
             <button class="voice-btn" id="screenShareBtn" onclick="toggleScreenShare()" title="Share Screen"
                 style="background: #5865f2; color: white;">🖥️</button>
-            <button class="voice-btn hangup"
-                onclick="if(useFirebaseAudio || isAudioStreaming) endFirebaseAudioCall(); else endCall();"
-                title="End Call">📞</button>
+            <button class="voice-btn hangup" onclick="endCall()" title="End Call">📞</button>
         </div>
         <video id="remoteVideo" autoplay playsinline
             style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;"></video>
+        <img id="remoteScreenImg"
+            style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;">
     </div>
 
     <script>
@@ -1517,6 +1526,15 @@
         let isBanned = false;
         let pendingAttachment = null; // Global variable for the selected file
         let myFriends = {}; // Cache of current user's friends
+
+        // Ably Non-WebRTC Call Variables
+        let ably = null;
+        let ablyAudioContext = null;
+        let ablyActiveChannels = {}; // Track active call channels
+        let screenShareCanvas = null;
+        const ABLY_KEY_PRIMARY = 'mN2Xvw.3XjD6g:x4Gv2S9zLp9v9W5R';
+        const ABLY_KEY_SECONDARY = 'HPQ5CA._kKpvA:3FkPiTXeI1vEUB6ro_jH_DKuHYVILnBP8ruxXuupTXc';
+        let currentAblyKey = ABLY_KEY_PRIMARY;
 
         // Voice Call Variables (WebRTC - no DB storage)
         let peerConnection = null;
@@ -1597,6 +1615,11 @@
                             if (savedChannel) currentChannel = savedChannel;
                         }
 
+                        // Initialize Ably
+                        if (typeof Ably !== 'undefined') {
+                            initializeAbly();
+                        }
+
                         checkBanStatus();
                     } else {
                         showSignInRequired();
@@ -1606,6 +1629,27 @@
                 console.warn('Firebase not configured. Please add your Firebase config.');
                 showSignInRequired();
             }
+        }
+
+        function initializeAbly() {
+            if (typeof Ably === 'undefined') return;
+
+            ably = new Ably.Realtime({ key: currentAblyKey, queryTime: true });
+
+            ably.connection.on('failed', (stateChange) => {
+                console.warn("Ably Primary Key Failed or Expired. Rotating...");
+                if (currentAblyKey === ABLY_KEY_PRIMARY) {
+                    currentAblyKey = ABLY_KEY_SECONDARY;
+                    ably.close();
+                    initializeAbly();
+                } else {
+                    console.error("All Ably keys exhausted.");
+                }
+            });
+
+            ably.connection.on('connected', () => {
+                console.log("Ably connected with key:", currentAblyKey.split('.')[0]);
+            });
         }
 
         function showSignInRequired() {
@@ -2777,6 +2821,7 @@
                 document.getElementById('settingsMentionNotif').checked = prefs.mentionNotif !== false;
 
                 // Voice & Video settings
+                document.getElementById('settingsCallMethod').value = prefs.callMethod || 'ably';
                 document.getElementById('settingsInputVol').value = prefs.inputVol || 100;
                 document.getElementById('inputVolVal').textContent = (prefs.inputVol || 100) + '%';
                 document.getElementById('settingsOutputVol').value = prefs.outputVol || 100;
@@ -2845,6 +2890,7 @@
                     mentionNotif: document.getElementById('settingsMentionNotif').checked,
 
                     // Voice & Video
+                    callMethod: document.getElementById('settingsCallMethod').value,
                     inputVol: parseInt(document.getElementById('settingsInputVol').value),
                     outputVol: parseInt(document.getElementById('settingsOutputVol').value),
                     echoCancellation: document.getElementById('settingsEchoCancellation').checked,
@@ -2885,6 +2931,10 @@
             if (!prefs) return;
             // Apply theme color
             document.querySelectorAll('.btn-primary').forEach(b => b.style.background = prefs.themeColor);
+
+            // Save call method for startCall to use
+            window.lastAppliedCallMethod = prefs.callMethod || 'ably';
+
             const msgArea = document.getElementById('messages');
             msgArea.style.fontSize = prefs.fontSize + 'px';
 
@@ -3122,9 +3172,24 @@
 
         // Unified call function - uses Firebase streaming by default (works with Blocksi)
         async function startCall(friendUid, friendName) {
-            // Use Firebase audio streaming (works on school Chromebooks with Blocksi)
-            useFirebaseAudio = true;
-            await startFirebaseAudioCall(friendUid, friendName);
+            // Get preferred call method from current user data/preferences
+            let method = 'ably'; // Default
+            if (currentUser) {
+                // We can't easily wait for the DB here if it's not loaded, 
+                // but loadUserData already sets userRole and we can check prefs there
+                // However, the easiest way is to check the global preference applied to the app
+                method = window.lastAppliedCallMethod || 'ably';
+            }
+
+            if (method === 'firebase') {
+                useFirebaseAudio = true;
+                await startFirebaseAudioCall(friendUid, friendName);
+            } else if (method === 'webrtc') {
+                useFirebaseAudio = false;
+                await startWebRTCCall(friendUid, friendName);
+            } else {
+                await startAblyCall(friendUid, friendName);
+            }
         }
 
         // Original WebRTC call function (for reference, not used by default)
@@ -3346,6 +3411,14 @@
                                     } else {
                                         child.ref.remove();
                                     }
+                                } else if (signal.type === 'ably_offer') {
+                                    const friendName = myFriends[msg.userId]?.name || 'Friend';
+                                    if (confirm(`📞 Incoming call from ${friendName}! Answer?`)) {
+                                        child.ref.remove();
+                                        answerAblyCall(msg.userId, friendName);
+                                    } else {
+                                        child.ref.remove();
+                                    }
                                 }
                             }
                         });
@@ -3354,23 +3427,21 @@
         }
 
         function toggleMute() {
+            isMuted = !isMuted;
             if (localStream) {
-                isMuted = !isMuted;
                 localStream.getAudioTracks().forEach(track => {
                     track.enabled = !isMuted;
                 });
-                const btn = document.getElementById('muteBtn');
-                btn.classList.toggle('active', isMuted);
-                btn.textContent = isMuted ? '🔇' : '🎤';
             }
+            const btn = document.getElementById('muteBtn');
+            btn.classList.toggle('active', isMuted);
+            btn.textContent = isMuted ? '🔇' : '🎤';
         }
 
         function endCall() {
             // Log call duration
             if (currentCallFriend && callStartTime > 0) {
                 const durationMs = Date.now() - callStartTime;
-
-                // Send system message to DM (only if call connected longer than 3s)
                 if (durationMs > 3000) {
                     const dmChannelId = getDMChannelId(currentUser.uid, currentCallFriend.uid);
                     firebase.database().ref(`chat/__dms__/${dmChannelId}`).push({
@@ -3383,20 +3454,41 @@
                 }
             }
 
-            // Send hangup signal
+            // Ably Signal & Cleanup
+            if (ably && currentCallFriend) {
+                const channel = ably.channels.get(`call:${currentCallFriend.uid}`);
+                channel.publish(`signal:${currentUser.uid}`, { type: 'hangup' });
+                if (ablyActiveChannels[currentCallFriend.uid]) {
+                    ablyActiveChannels[currentCallFriend.uid].unsubscribe();
+                    delete ablyActiveChannels[currentCallFriend.uid];
+                }
+            }
+
+            // Signal hangup for WebRTC
             if (currentCallFriend) {
                 sendCallSignal(currentCallFriend.uid, { type: 'hangup' });
             }
 
-            // Cleanup
+            // Peer Cleanup
             if (peerConnection) {
                 peerConnection.close();
                 peerConnection = null;
+            }
+
+            // Stream Cleanup
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
             }
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
                 localStream = null;
             }
+
+            isAudioStreaming = false;
+            isScreenSharing = false;
+            clearInterval(screenShareInterval);
+
+            // Listener Cleanup
             if (callSignalListener) {
                 const dmChannelId = currentCallFriend ? getDMChannelId(currentUser.uid, currentCallFriend.uid) : null;
                 if (dmChannelId) {
@@ -3405,23 +3497,30 @@
                 callSignalListener = null;
             }
 
-            // Remove remote elements
+            // UI Cleanup
             const remoteAudio = document.getElementById('remoteAudio');
             if (remoteAudio) remoteAudio.remove();
+
             const remoteVideo = document.getElementById('remoteVideo');
             if (remoteVideo) {
                 remoteVideo.srcObject = null;
                 remoteVideo.style.display = 'none';
             }
-            document.getElementById('callAvatar').style.display = 'flex';
 
-            // Hide overlay
+            const remoteImg = document.getElementById('remoteScreenImg');
+            if (remoteImg) {
+                remoteImg.src = '';
+                remoteImg.style.display = 'none';
+            }
+
+            document.getElementById('callAvatar').style.display = 'flex';
             document.getElementById('voiceCallOverlay').classList.remove('show');
+
             isMuted = false;
-            isScreenSharing = false;
             callStartTime = 0;
             currentCallFriend = null;
-            pendingIceCandidates = []; // Clear ICE candidate buffer
+            pendingIceCandidates = [];
+
             document.getElementById('muteBtn').classList.remove('active');
             document.getElementById('muteBtn').textContent = '🎤';
             document.getElementById('screenShareBtn').style.background = '#5865f2';
@@ -3505,71 +3604,214 @@
         }
 
         async function toggleScreenShare() {
-            if (!peerConnection || !currentCallFriend) {
-                console.error('No active call for screen sharing');
-                return;
-            }
-
-            try {
-                if (isScreenSharing) {
-                    // Stop sharing
-                    const senders = peerConnection.getSenders();
-                    const sender = senders.find(s => s.track && s.track.kind === 'video');
-                    if (sender) {
-                        peerConnection.removeTrack(sender);
-                        sender.track.stop();
-                    }
-                    isScreenSharing = false;
-                    document.getElementById('screenShareBtn').style.background = '#5865f2';
-                    document.getElementById('callStatus').textContent = 'Connected';
-
-                    // Send renegotiation offer to remove video track
-                    const offer = await peerConnection.createOffer();
-                    await peerConnection.setLocalDescription(offer);
-                    sendCallSignal(currentCallFriend.uid, { type: 'offer', offer: offer });
-                } else {
-                    // Start sharing
-                    console.log('Starting screen share...');
-                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-                    const videoTrack = stream.getVideoTracks()[0];
-
-                    videoTrack.onended = () => {
-                        console.log('Screen share ended by user');
-                        if (isScreenSharing) toggleScreenShare();
-                    };
-
-                    const senders = peerConnection.getSenders();
-                    const sender = senders.find(s => s.track && s.track.kind === 'video');
-
-                    if (sender) {
-                        console.log('Replacing existing video track');
-                        await sender.replaceTrack(videoTrack);
-                    } else {
-                        console.log('Adding new video track');
-                        peerConnection.addTrack(videoTrack, stream);
-                    }
-
+            if (isScreenSharing) {
+                isScreenSharing = false;
+                clearInterval(screenShareInterval);
+                if (currentCallFriend && ably) {
+                    const channel = ably.channels.get(`call:${currentCallFriend.uid}`);
+                    channel.publish(`signal:${currentUser.uid}`, { type: 'screen_stop' });
+                }
+                document.getElementById('screenShareBtn').style.background = '#5865f2';
+                document.getElementById('callStatus').textContent = 'Connected';
+                hideAblyScreen();
+            } else {
+                if (!currentCallFriend) return;
+                try {
+                    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
                     isScreenSharing = true;
                     document.getElementById('screenShareBtn').style.background = '#ed4245';
                     document.getElementById('callStatus').textContent = 'Sharing Screen...';
 
-                    // Send renegotiation offer
-                    console.log('Sending renegotiation offer for screen share');
-                    const offer = await peerConnection.createOffer();
-                    await peerConnection.setLocalDescription(offer);
-                    sendCallSignal(currentCallFriend.uid, { type: 'offer', offer: offer });
+                    if (ably) {
+                        const channel = ably.channels.get(`call:${currentCallFriend.uid}`);
+                        channel.publish(`signal:${currentUser.uid}`, { type: 'screen_start' });
+
+                        const video = document.createElement('video');
+                        video.srcObject = screenStream;
+                        video.play();
+
+                        if (!screenShareCanvas) screenShareCanvas = document.createElement('canvas');
+
+                        screenShareInterval = setInterval(() => {
+                            if (!isScreenSharing) return;
+                            const ctx = screenShareCanvas.getContext('2d');
+                            screenShareCanvas.width = 640;
+                            screenShareCanvas.height = 360;
+                            ctx.drawImage(video, 0, 0, 640, 360);
+                            const base64Frame = screenShareCanvas.toDataURL('image/jpeg', 0.4);
+                            channel.publish(`screen:${currentUser.uid}`, base64Frame);
+                        }, 250);
+                    }
+
+                    screenStream.getVideoTracks()[0].onended = () => {
+                        if (isScreenSharing) toggleScreenShare();
+                    };
+                } catch (err) {
+                    console.error("Screen share error:", err);
+                    isScreenSharing = false;
                 }
-            } catch (err) {
-                console.error("Screen share error:", err);
-                alert('Screen sharing failed: ' + err.message);
-                isScreenSharing = false;
-                document.getElementById('screenShareBtn').style.background = '#5865f2';
             }
         }
 
+        async function answerAblyCall(friendUid, friendName) {
+            try {
+                currentCallFriend = { uid: friendUid, name: friendName };
+                callStartTime = Date.now();
+
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                if (!ablyAudioContext) ablyAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                mediaRecorder = new MediaRecorder(localStream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000
+                });
+
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0 && isAudioStreaming) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            sendAblyAudioChunk(friendUid, base64data);
+                        };
+                        reader.readAsDataURL(event.data);
+                    }
+                };
+
+                mediaRecorder.start(150);
+                isAudioStreaming = true;
+
+                const channel = ably.channels.get(`call:${currentUser.uid}`);
+                channel.subscribe(`audio:${friendUid}`, (message) => {
+                    playAblyAudioChunk(message.data);
+                });
+                ablyActiveChannels[friendUid] = channel;
+
+                showCallOverlay(friendName, 'Connected (Ably)');
+                listenToAblySignals(friendUid);
+
+            } catch (err) {
+                console.error('Answer Ably failed:', err);
+                endCall();
+            }
+        }
+
+        function showAblyScreen(friendUid) {
+            const remoteImg = document.getElementById('remoteScreenImg');
+            const channel = ably.channels.get(`call:${currentUser.uid}`);
+            channel.subscribe(`screen:${friendUid}`, (message) => {
+                remoteImg.src = message.data;
+                remoteImg.style.display = 'block';
+                document.getElementById('callAvatar').style.display = 'none';
+            });
+        }
+
+        function hideAblyScreen() {
+            const remoteImg = document.getElementById('remoteScreenImg');
+            remoteImg.style.display = 'none';
+            remoteImg.src = '';
+            document.getElementById('callAvatar').style.display = 'flex';
+        }
+
         // =====================================================
-        // FIREBASE AUDIO STREAMING (Blocksi Workaround)
+        // ABLY NON-WEBRTC CALLS
         // =====================================================
+        async function startAblyCall(friendUid, friendName) {
+            if (!myFriends[friendUid]) {
+                alert('You can only call friends!');
+                return;
+            }
+
+            try {
+                callStartTime = Date.now();
+                currentCallFriend = { uid: friendUid, name: friendName };
+
+                // Get microphone access
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                // Initialize Audio Context for playing remote audio
+                if (!ablyAudioContext) ablyAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Setup MediaRecorder to capture audio chunks
+                mediaRecorder = new MediaRecorder(localStream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000
+                });
+
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0 && isAudioStreaming) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            sendAblyAudioChunk(friendUid, base64data);
+                        };
+                        reader.readAsDataURL(event.data);
+                    }
+                };
+
+                mediaRecorder.start(150); // Small chunks for low latency
+                isAudioStreaming = true;
+
+                // Subscribe to incoming audio from this friend
+                const channel = ably.channels.get(`call:${currentUser.uid}`);
+                channel.subscribe(`audio:${friendUid}`, (message) => {
+                    playAblyAudioChunk(message.data);
+                });
+                ablyActiveChannels[friendUid] = channel;
+
+                // Signal the friend that we are calling (using Firebase for now as it's already there)
+                sendCallSignal(friendUid, { type: 'ably_offer', from: currentUser.uid, name: currentUser.displayName });
+
+                showCallOverlay(friendName, 'Ably Calling...');
+                listenToAblySignals(friendUid);
+
+            } catch (err) {
+                console.error('Ably call failed:', err);
+                // Fallback to Firebase audio IF Ably fails
+                console.log('Falling back to Firebase audio...');
+                useFirebaseAudio = true;
+                await startFirebaseAudioCall(friendUid, friendName);
+            }
+        }
+
+        function sendAblyAudioChunk(friendUid, audioData) {
+            if (!ably) return;
+            const channel = ably.channels.get(`call:${friendUid}`);
+            channel.publish(`audio:${currentUser.uid}`, audioData);
+        }
+
+        async function playAblyAudioChunk(base64Data) {
+            try {
+                if (!ablyAudioContext) ablyAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+
+                const audioBuffer = await ablyAudioContext.decodeAudioData(bytes.buffer);
+                const source = ablyAudioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(ablyAudioContext.destination);
+                source.start(0);
+            } catch (err) {
+                console.error('Error playing Ably audio chunk:', err);
+            }
+        }
+
+        function listenToAblySignals(friendUid) {
+            // Subscribe to hangup and other signals via Ably
+            const channel = ably.channels.get(`call:${currentUser.uid}`);
+            channel.subscribe(`signal:${friendUid}`, (message) => {
+                const signal = message.data;
+                if (signal.type === 'hangup') {
+                    endAblyCall();
+                } else if (signal.type === 'screen_start') {
+                    showAblyScreen(friendUid);
+                } else if (signal.type === 'screen_stop') {
+                    hideAblyScreen();
+                }
+            });
+        }
         async function startFirebaseAudioCall(friendUid, friendName) {
             if (!myFriends[friendUid]) {
                 alert('You can only call friends!');
