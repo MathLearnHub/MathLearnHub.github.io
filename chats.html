@@ -3640,8 +3640,8 @@
                         screenShareInterval = setInterval(() => {
                             if (!isScreenSharing) return;
                             const ctx = screenShareCanvas.getContext('2d');
-                            screenShareCanvas.width = 640;
-                            screenShareCanvas.height = 360;
+                            screenShareCanvas.width = 854;
+                            screenShareCanvas.height = 480;
                             ctx.drawImage(video, 0, 0, 640, 360);
                             const base64Frame = screenShareCanvas.toDataURL('image/jpeg', 0.4);
                             channel.publish(`screen:${currentUser.uid}`, base64Frame);
