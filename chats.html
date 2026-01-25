@@ -1493,10 +1493,14 @@
         <div class="voice-call-name" id="callName">Calling...</div>
         <div class="voice-call-status" id="callStatus">Connecting...</div>
         <div class="voice-call-controls">
-            <button class="voice-btn mute" id="muteBtn" onclick="toggleMute()" title="Mute">🎤</button>
+            <button class="voice-btn mute" id="muteBtn"
+                onclick="if(useFirebaseAudio || isAudioStreaming) toggleMuteFirebase(); else toggleMute();"
+                title="Mute">🎤</button>
             <button class="voice-btn" id="screenShareBtn" onclick="toggleScreenShare()" title="Share Screen"
                 style="background: #5865f2; color: white;">🖥️</button>
-            <button class="voice-btn hangup" onclick="endCall()" title="End Call">📞</button>
+            <button class="voice-btn hangup"
+                onclick="if(useFirebaseAudio || isAudioStreaming) endFirebaseAudioCall(); else endCall();"
+                title="End Call">📞</button>
         </div>
         <video id="remoteVideo" autoplay playsinline
             style="display: none; max-width: 80%; max-height: 60vh; border-radius: 8px; margin-top: 16px; border: 2px solid #5865f2;"></video>
@@ -1524,12 +1528,40 @@
         let callSignalListener = null;
         let pendingIceCandidates = []; // Buffer for ICE candidates that arrive before remote description
 
-        // WebRTC Configuration (Google's free STUN servers)
+        // Firebase Audio Streaming Variables (Blocksi workaround)
+        let audioContext = null;
+        let mediaRecorder = null;
+        let audioStreamChunks = [];
+        let isAudioStreaming = false;
+        let streamingInterval = null;
+        let audioStreamListener = null;
+        let useFirebaseAudio = false; // Toggle between WebRTC and Firebase streaming
+
+        // WebRTC Configuration (STUN + TURN servers for better connectivity)
         const rtcConfig = {
             iceServers: [
+                // Google's free STUN servers
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                // Free public TURN servers (for NAT traversal)
+                {
+                    urls: 'turn:openrelay.metered.ca:80',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                },
+                {
+                    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+                    username: 'openrelayproject',
+                    credential: 'openrelayproject'
+                }
+            ],
+            iceCandidatePoolSize: 10
         };
 
         // Initialize Firebase
@@ -3087,7 +3119,16 @@
         // =====================================================
         // VOICE CALLS & SCREEN SHARE
         // =====================================================
+
+        // Unified call function - uses Firebase streaming by default (works with Blocksi)
         async function startCall(friendUid, friendName) {
+            // Use Firebase audio streaming (works on school Chromebooks with Blocksi)
+            useFirebaseAudio = true;
+            await startFirebaseAudioCall(friendUid, friendName);
+        }
+
+        // Original WebRTC call function (for reference, not used by default)
+        async function startWebRTCCall(friendUid, friendName) {
             if (!myFriends[friendUid]) {
                 alert('You can only call friends!');
                 return;
@@ -3132,12 +3173,24 @@
                     if (peerConnection.connectionState === 'connected') {
                         document.getElementById('callStatus').textContent = 'Connected!';
                     } else if (peerConnection.connectionState === 'failed') {
-                        document.getElementById('callStatus').textContent = 'Connection failed';
+                        document.getElementById('callStatus').textContent = 'Connection failed - Retrying...';
+                        // Auto-end call after connection failure
+                        setTimeout(() => {
+                            if (peerConnection && peerConnection.connectionState === 'failed') {
+                                alert('Call failed: Could not establish connection. This may be due to network restrictions or firewall settings.');
+                                endCall();
+                            }
+                        }, 3000);
+                    } else if (peerConnection.connectionState === 'disconnected') {
+                        document.getElementById('callStatus').textContent = 'Reconnecting...';
                     }
                 };
 
                 peerConnection.oniceconnectionstatechange = () => {
                     console.log('ICE connection state:', peerConnection.iceConnectionState);
+                    if (peerConnection.iceConnectionState === 'failed') {
+                        console.error('ICE connection failed - TURN servers should help with NAT traversal');
+                    }
                 };
 
                 // Handle ICE candidates - send through DM as signal message
@@ -3511,6 +3564,192 @@
                 alert('Screen sharing failed: ' + err.message);
                 isScreenSharing = false;
                 document.getElementById('screenShareBtn').style.background = '#5865f2';
+            }
+        }
+
+        // =====================================================
+        // FIREBASE AUDIO STREAMING (Blocksi Workaround)
+        // =====================================================
+        async function startFirebaseAudioCall(friendUid, friendName) {
+            if (!myFriends[friendUid]) {
+                alert('You can only call friends!');
+                return;
+            }
+
+            try {
+                callStartTime = Date.now();
+                currentCallFriend = { uid: friendUid, name: friendName };
+
+                // Get microphone access
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                // Initialize Audio Context
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Setup MediaRecorder to capture audio chunks
+                mediaRecorder = new MediaRecorder(localStream, {
+                    mimeType: 'audio/webm;codecs=opus',
+                    audioBitsPerSecond: 16000 // Lower bitrate for faster transmission
+                });
+
+                mediaRecorder.ondataavailable = async (event) => {
+                    if (event.data.size > 0 && isAudioStreaming) {
+                        // Convert blob to base64
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const base64data = reader.result.split(',')[1];
+                            sendAudioChunk(friendUid, base64data);
+                        };
+                        reader.readAsDataURL(event.data);
+                    }
+                };
+
+                // Start recording in 100ms chunks
+                mediaRecorder.start(100);
+                isAudioStreaming = true;
+
+                // Show call UI
+                showCallOverlay(friendName, 'Streaming...');
+
+                // Send "Call started" message
+                const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+                firebase.database().ref(`chat/__dms__/${dmChannelId}`).push({
+                    text: `📞 Call started`,
+                    userId: 'SYSTEM',
+                    userName: 'System',
+                    timestamp: Date.now(),
+                    isSystem: true
+                });
+
+                // Listen for incoming audio
+                listenToFirebaseAudio(friendUid);
+
+            } catch (err) {
+                console.error('Firebase audio call failed:', err);
+                alert('Could not start audio streaming. Please allow microphone access.');
+                endFirebaseAudioCall();
+            }
+        }
+
+        function sendAudioChunk(friendUid, audioData) {
+            const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+            const audioRef = firebase.database().ref(`audioStream/${dmChannelId}/${currentUser.uid}`);
+
+            // Push audio chunk with auto-delete timestamp
+            audioRef.push({
+                data: audioData,
+                timestamp: Date.now(),
+                sender: currentUser.uid
+            });
+        }
+
+        function listenToFirebaseAudio(friendUid) {
+            const dmChannelId = getDMChannelId(currentUser.uid, friendUid);
+            const audioRef = firebase.database().ref(`audioStream/${dmChannelId}/${friendUid}`);
+
+            audioStreamListener = audioRef.on('child_added', async (snapshot) => {
+                const chunk = snapshot.val();
+
+                if (chunk && chunk.sender === friendUid) {
+                    // Play the audio chunk
+                    await playAudioChunk(chunk.data);
+
+                    // DELETE the chunk immediately after playing
+                    snapshot.ref.remove();
+                }
+            });
+        }
+
+        async function playAudioChunk(base64Data) {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+
+                // Convert base64 to ArrayBuffer
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Decode and play audio
+                const audioBuffer = await audioContext.decodeAudioData(bytes.buffer);
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+
+            } catch (err) {
+                console.error('Error playing audio chunk:', err);
+            }
+        }
+
+        function endFirebaseAudioCall() {
+            // Stop recording
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            // Stop microphone
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+
+            // Stop listening to audio stream
+            if (audioStreamListener && currentCallFriend) {
+                const dmChannelId = getDMChannelId(currentUser.uid, currentCallFriend.uid);
+                firebase.database().ref(`audioStream/${dmChannelId}/${currentCallFriend.uid}`).off('child_added', audioStreamListener);
+                audioStreamListener = null;
+            }
+
+            // Clean up ALL audio chunks from this call
+            if (currentCallFriend) {
+                const dmChannelId = getDMChannelId(currentUser.uid, currentCallFriend.uid);
+                firebase.database().ref(`audioStream/${dmChannelId}`).remove();
+
+                // Send call ended message
+                const durationMs = Date.now() - callStartTime;
+                if (durationMs > 3000) {
+                    firebase.database().ref(`chat/__dms__/${dmChannelId}`).push({
+                        text: `📞 Call ended`,
+                        userId: 'SYSTEM',
+                        userName: 'System',
+                        timestamp: Date.now(),
+                        isSystem: true
+                    });
+                }
+            }
+
+            // Close audio context
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Reset state
+            isAudioStreaming = false;
+            mediaRecorder = null;
+            callStartTime = 0;
+            currentCallFriend = null;
+
+            // Hide call overlay
+            document.getElementById('voiceCallOverlay').classList.remove('show');
+            document.getElementById('muteBtn').classList.remove('active');
+            document.getElementById('muteBtn').textContent = '🎤';
+        }
+
+        // Modified toggleMute for Firebase streaming
+        function toggleMuteFirebase() {
+            if (localStream) {
+                isMuted = !isMuted;
+                localStream.getAudioTracks().forEach(track => {
+                    track.enabled = !isMuted;
+                });
+                const btn = document.getElementById('muteBtn');
+                btn.classList.toggle('active', isMuted);
+                btn.textContent = isMuted ? '🔇' : '🎤';
             }
         }
 
