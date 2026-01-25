@@ -255,9 +255,6 @@
                 const snap = await db.ref(`users/${user.uid}`).get();
                 if (!snap.exists()) return console.warn("User data missing");
                 const data = snap.val();
-                trackUser(user.uid);
-                trackUserOnlineStatus(user.uid);
-
                 if (!role) role = data.role;
                 if (role === "blocked") { window.location.href = "google.com" }
 
@@ -393,6 +390,7 @@
     <iframe id="secretIframe" allowfullscreen></iframe>
 
 </body>
+
 
 
 </html>
