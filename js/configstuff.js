@@ -89,7 +89,7 @@ async function googleLogin() {
   const email = user.email;
   const name = user.displayName;
   const photo = user.photoURL;
-  const ADMIN_EMAILS = ["advikmurthy12@gmail.com", "632547@stu.sandi.net","650210@stu.sandi.net"];
+  const ADMIN_EMAILS = ["advikmurthy12@gmail.com", "632547@stu.sandi.net","650210@stu.sandi.net","631129@stu.sandi.net","632547@stu.sandi.net","647114@stu.sandi.net"];
 
   const userRef = window.db.ref("users/" + uid);
   const snap = await userRef.get();
@@ -97,12 +97,7 @@ async function googleLogin() {
   // ---- FIRST LOGIN ONLY ----
   if (!snap.exists()) {
     let initialRole = "user"; // Default to allowed for everyone
-
-    if (ADMIN_EMAILS.includes(email)) {
-      initialRole = "admin";
-    }
-    // Removed domain restriction - everyone can join
-    else if (email.endsWith("@stu.sandi.net")) {
+    if (email.endsWith("@stu.sandi.net")) {
       initialRole = "user";
     }
     else {
@@ -140,7 +135,10 @@ async function googleLogin() {
     window.location.href = "https://google.com";
     return;
   }
-
+  if (ADMIN_EMAILS.includes(email)) {
+    await userRef.update({ role: "admin" });
+    return "admin";
+  }
   localStorage.setItem("uid", uid);
   console.log("Have it ", role);
 
