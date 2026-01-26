@@ -4037,7 +4037,7 @@
         async function DailyTasks() {
             const numberofacti = await window.getSubfolderCountRTDB("activity");
             if (numberofacti >=10) {
-                window.deleteProp(`activity`);
+                //window.deleteProp(`activity`);
             } else {
                 console.log("Activities less than 10, no deletion needed.");
             }
@@ -4045,7 +4045,7 @@
         }
         // Check for calls every 3 seconds
         setInterval(checkIncomingCalls, 3000);
-        setInterval(DailyTasks, 60000); // Check daily tasks every minute for demo purposes
+        //setInterval(DailyTasks, 60000); // Check daily tasks every minute for demo purposes
         // Initialize app
         initApp();
     </script>
