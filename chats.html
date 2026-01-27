@@ -2074,10 +2074,12 @@
             }
 
             if (firebase.apps.length > 0) {
-                messagesListener = firebase.database().ref(path).limitToLast(50);
+                // Change from 50 to 20 messages
+                messagesListener = firebase.database().ref(path).limitToLast(20);
                 messagesListener.on('value', (snapshot) => {
                     const messages = snapshot.val() || {};
                     renderMessages(messages);
+                    cleanupOldMessages(path); // Add cleanup
                 });
             } else {
                 renderMessages({});
@@ -2133,6 +2135,26 @@
             }).join('');
 
             container.scrollTop = container.scrollHeight;
+        }
+        async function cleanupOldMessages(path) {
+            if (firebase.apps.length > 0) {
+                const snapshot = await firebase.database().ref(path).once('value');
+                const messages = snapshot.val() || {};
+                const messageArray = Object.entries(messages)
+                    .map(([id, msg]) => ({ id, ...msg }))
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Keep only last 20, delete the rest
+                if (messageArray.length > 20) {
+                    const toDelete = messageArray.slice(20); // Get items beyond the 20th
+                    const updates = {};
+                    toDelete.forEach(msg => {
+                        updates[`${path}/${msg.id}`] = null; // null deletes the key
+                    });
+                    await firebase.database().ref().update(updates);
+                    console.log(`Cleaned up ${toDelete.length} old messages from ${path}`);
+                }
+            }
         }
 
         function parseMessageText(text) {
@@ -2218,6 +2240,7 @@
                         logActivity('message', `Sent message in #${currentChannel}`);
                     }
                     clearAttachment();
+                    cleanupOldMessages(path); // Cleanup after sending
                 });
             }
 
@@ -2511,6 +2534,7 @@
                 firebase.database().ref('activity').orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
                     const activities = snapshot.val() || {};
                     renderActivityLog(activities);
+                    cleanupOldActivities(); // Add cleanup
                 });
             }
         }
@@ -2544,6 +2568,8 @@
                     timestamp: Date.now(),
                     server: currentServer,
                     channel: currentChannel
+                }).then(() => {
+                    cleanupOldActivities();
                 });
             }
         }
@@ -2585,7 +2611,26 @@
 
             reader.readAsDataURL(file);
         });
-
+        async function cleanupOldActivities() {
+            if (firebase.apps.length > 0) {
+                const snapshot = await firebase.database().ref('activity').orderByChild('timestamp').once('value');
+                const activities = snapshot.val() || {};
+                const activityArray = Object.entries(activities)
+                    .map(([id, data]) => ({ id, ...data }))
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                
+                // Keep only last 10, delete the rest
+                if (activityArray.length > 10) {
+                    const toDelete = activityArray.slice(10); // Get items beyond the 10th
+                    const updates = {};
+                    toDelete.forEach(activity => {
+                        updates[`activity/${activity.id}`] = null; // null deletes the key
+                    });
+                    await firebase.database().ref().update(updates);
+                    console.log(`Cleaned up ${toDelete.length} old activity logs`);
+                }
+            }
+        }
         function goMainHub() {
             const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
             const isFree = sessionStorage.getItem('freeAccess') === 'true';
@@ -4035,17 +4080,36 @@
         }
 
         async function DailyTasks() {
-            const numberofacti = await window.getSubfolderCountRTDB("activity");
-            if (numberofacti >=10) {
-                //window.deleteProp(`activity`);
-            } else {
-                console.log("Activities less than 10, no deletion needed.");
+            // Clean up old activities
+            await cleanupOldActivities();
+            
+            // Clean up messages in all channels
+            const servers = await firebase.database().ref('servers').once('value');
+            const serversData = servers.val() || {};
+            
+            for (const serverId in serversData) {
+                const server = serversData[serverId];
+                if (server.channels) {
+                    for (const channelId in server.channels) {
+                        const path = `chat/${serverId}/${channelId}`;
+                        await cleanupOldMessages(path);
+                    }
+                }
             }
-
+            
+            // Clean up DM channels
+            const dms = await firebase.database().ref('chat/__dms__').once('value');
+            const dmsData = dms.val() || {};
+            for (const dmId in dmsData) {
+                const path = `chat/__dms__/${dmId}`;
+                await cleanupOldMessages(path);
+            }
+            
+            console.log('DailyTasks: Cleanup completed');
         }
-        // Check for calls every 3 seconds
-        setInterval(checkIncomingCalls, 3000);
-        //setInterval(DailyTasks, 60000); // Check daily tasks every minute for demo purposes
+        // Check for calls every 30 seconds
+        setInterval(checkIncomingCalls, 3000); // 3 secconds
+        setInterval(DailyTasks, 60000 * 5); // Check daily tasks every minute for demo purposes
         // Initialize app
         initApp();
     </script>

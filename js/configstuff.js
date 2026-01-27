@@ -76,73 +76,63 @@ async function googleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
-  let result;
   try {
-    result = await window.auth.signInWithPopup(provider);
-  } catch {
-    alert("Login failed");
-    return;
-  }
+    const result = await window.auth.signInWithPopup(provider);
+    const user = result.user;
+    const { uid, email, displayName, photoURL } = user;
 
-  const user = result.user;
-  const uid = user.uid;
-  const email = user.email;
-  const name = user.displayName;
-  const photo = user.photoURL;
-  const ADMIN_EMAILS = ["advikmurthy12@gmail.com", "632547@stu.sandi.net","650210@stu.sandi.net","631129@stu.sandi.net","632547@stu.sandi.net","647114@stu.sandi.net"];
+    const ADMIN_EMAILS = ["advikmurthy12@gmail.com", "632547@stu.sandi.net", "650210@stu.sandi.net", "631129@stu.sandi.net", "647114@stu.sandi.net"];
+    const userRef = window.db.ref("users/" + uid);
 
-  const userRef = window.db.ref("users/" + uid);
-  const snap = await userRef.get();
+    let role = "user"; // Default role
 
-  // ---- FIRST LOGIN ONLY ----
-  if (!snap.exists()) {
-    let initialRole = "user"; // Default to allowed for everyone
-    if (email.endsWith("@stu.sandi.net")) {
-      initialRole = "user";
-    }
-    else {
-      initialRole = "blocked";
+    // Determine role with clear priority: admin > blocked > user
+    if (ADMIN_EMAILS.includes(email)) {
+      role = "admin";
+    } else if (!email.endsWith("@stu.sandi.net")) {
+      role = "blocked";
     }
 
+    const snap = await userRef.get();
 
-    await userRef.set({
-      email,
-      role: initialRole,
-      name,
-      icon: photo,
-      created: Date.now(),
-      online: true,
-      timeSpent: 0,
-      banned: false
-    });
+    if (!snap.exists()) {
+      // First login: set up the user profile in the database
+      await userRef.set({
+        email,
+        role: role, // Use the determined role
+        name: displayName,
+        icon: photoURL,
+        created: Date.now(),
+        online: true,
+        timeSpent: 0,
+        banned: false
+      });
+    } else {
+      // Existing user: ensure their role is up-to-date, especially for new admins
+      const dbRole = snap.child("role").val();
+      if (role === "admin" && dbRole !== "admin") {
+        await userRef.update({ role: "admin" });
+      } else if (dbRole === "blocked") {
+         role = "blocked"; // If blocked in DB, override everything
+      } else {
+        role = dbRole || role; // Trust DB role if it exists
+      }
+    }
+
+    if (role === "blocked") {
+      alert("Your account has been blocked by an administrator.");
+      window.location.href = "https://google.com"; // Or a more appropriate blocked page
+      return null;
+    }
+
+    localStorage.setItem("uid", uid);
+    return role;
+
+  } catch (error) {
+    console.error("Login failed:", error);
+    alert("Login failed. Please try again.");
+    return null;
   }
-
-  // ---- ALWAYS trust DB role ----
-
-  if (ADMIN_EMAILS.includes(email)) {
-    initialRole = "admin";
-  } else if (email.endsWith("@stu.sandi.net")) {
-    initialRole = "user";
-  }
-
-  const role = (await userRef.child("role").get()).val();
-  const banned = (await userRef.child("banned").get()).val();
-
-  console.log("This is  ", role);
-
-  if (role === "blocked") {
-    alert("Your account has been blocked by an administrator.");
-    window.location.href = "https://google.com";
-    return;
-  }
-  if (ADMIN_EMAILS.includes(email)) {
-    await userRef.update({ role: "admin" });
-    return "admin";
-  }
-  localStorage.setItem("uid", uid);
-  console.log("Have it ", role);
-
-  return role;
 }
 
 
