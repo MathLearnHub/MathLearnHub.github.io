@@ -142,25 +142,20 @@ if (uid) {
 } else {
   console.log("No UID found in storage, skipping auto-track.");
 }
+async function checkUserBanStatus() {
 
-const worker = new Worker("./worker.js");
+  const user = firebase.auth().currentUser;
+  if (!user) return;
 
-worker.onmessage = async (e) => {
-    if (e.data.type === "CHECK_BAN") {
-        const user = firebase.auth().currentUser;
-        if (!user) return;
+  const snap = await db.ref(`users/${user.uid}/role`).once("value");
+  const role = snap.val();
 
-        const snap = await db.ref(`users/${user.uid}/role`).once("value");
-        const role = snap.val();
-
-        if (role === "blocked") {
-            alert("You have been banned by an administrator.");
-            worker.postMessage({ type: "STOP" });
-            window.location.href = "https://www.google.com";
-        }
-    }
-};
-
+  if (role === "blocked") {
+    alert("You have been banned by an administrator.");
+    worker.postMessage({ type: "STOP" });
+    window.location.href = "https://www.google.com";
+  }
+}
 
 
 
@@ -175,6 +170,8 @@ function onUserChange(callback) {
     }
   });
 }
+
+setInterval(checkUserBanStatus, 15000); // Check every 15 seconds
 
 window.makeUserProp = makeUserProp;
 window.getUserProp = getUserProp;
