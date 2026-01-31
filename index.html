@@ -190,6 +190,9 @@
             }
 
             win.document.write('<html><head><style>html,body{margin:0;padding:0;overflow:hidden;}</style></head><body><iframe src="' + src + '" style="position:fixed;top:0;left:0;width:100vw;height:100vh;border:0;outline:0;" allowfullscreen></iframe></body></html>');
+            const scrpits = win.document.createElement('script');
+            scrpits.src = "js/antiblock.js";
+            win.document.head.appendChild(scrpits);
             win.document.close();
         }
 
