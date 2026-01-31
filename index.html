@@ -256,10 +256,11 @@
                 if (!snap.exists()) return console.warn("User data missing");
                 const data = snap.val();
                 if (!role) role = data.role;
-                if (role === "blocked") { window.location.href = "google.com" }
-
-                const src = role === "admin" ? "./games.html?admin=True" : "./games.html?admin=False";
-                launchIframe(src);
+                if (role === "blocked") { window.location.href = "https://google.com" } 
+                else{
+                    const src = role === "admin" ? "./games.html?admin=True" : "./games.html?admin=False";
+                    launchIframe(src);
+                }
 
             } catch (err) {
                 console.error("[openSecret] Error:", err);
