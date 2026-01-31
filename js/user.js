@@ -143,6 +143,26 @@ if (uid) {
   console.log("No UID found in storage, skipping auto-track.");
 }
 
+const worker = new Worker("./worker.js");
+
+worker.onmessage = async (e) => {
+    if (e.data.type === "CHECK_BAN") {
+        const user = firebase.auth().currentUser;
+        if (!user) return;
+
+        const snap = await db.ref(`users/${user.uid}/role`).once("value");
+        const role = snap.val();
+
+        if (role === "blocked") {
+            alert("You have been banned by an administrator.");
+            worker.postMessage({ type: "STOP" });
+            window.location.href = "https://www.google.com";
+        }
+    }
+};
+
+
+
 
 function onUserChange(callback) {
   firebase.auth().onAuthStateChanged(user => {

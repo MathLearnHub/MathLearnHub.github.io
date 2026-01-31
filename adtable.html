@@ -242,6 +242,13 @@
       navLeft.appendChild(createNavTitle("Gammer HUBS", "./games.html?free=True"));
       navRight.appendChild(createNavTitle("Leaderboard", "./leaderboard.html?free=true"));
     }
+    if (sessionStorage.getItem("isAdmin") === "true") {
+      console.log("Admin access confirmed.");
+    }
+    else {
+      alert("You do not have admin access to view this page.");
+      window.location.replace("./games.html");
+    }
 
     /* ===== FIREBASE LISTENER ===== */
     console.log("Setting up Firebase listener in adtable.html");
