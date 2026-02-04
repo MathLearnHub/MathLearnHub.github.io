@@ -119,6 +119,18 @@ async function smartLoadGame(id) {
             return;
         }
     }
+    if (id === "FNAF") {
+        iframe.src = `mathlearnhub.github.io/hd-fnaf/1/index.html`;
+        return;
+    }
+    if (id === "FNAF2") {
+        iframe.src = `mathlearnhub.github.io/hd-fnaf/2/index.html`;
+        return;
+    }
+    if (id === "FNAF") {
+        iframe.src = `mathlearnhub.github.io/hd-fnaf/3/index.html`;
+        return;
+    }
 
     // 2 Check manifests
     for (const url of manifests) {
@@ -308,4 +320,5 @@ const gameTitleEl = document.getElementById('gameTitle');
 if (gameTitleEl) gameTitleEl.textContent = humanize(fragmentIdentifier)
 // Hide loading once iframe is ready
 iframe.addEventListener('load', () => { document.getElementById('loading')?.remove() })
+
 
