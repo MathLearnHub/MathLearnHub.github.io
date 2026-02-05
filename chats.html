@@ -15,6 +15,7 @@
     <script src="js/settings-loader.js"></script>
     <script src="js/uttils.js"></script>
     <script src="js/antiblock.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <style>
         * {
             margin: 0;
@@ -332,6 +333,7 @@
 
         .message-content {
             flex: 1;
+            min-width: 0;
         }
 
         .message-header {
@@ -355,17 +357,22 @@
         .message-text {
             color: #dcddde;
             word-wrap: break-word;
+            overflow-wrap: anywhere;
             white-space: pre-wrap;
+            width: 100%;
         }
 
         .message-image {
-            max-width: 400px;
-            max-height: 300px;
+            max-width: 100%;
+            height: auto;
+            max-height: 60vh;
             border-radius: 8px;
             margin-top: 8px;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: block;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .system-message {
@@ -374,6 +381,48 @@
             font-size: 13px;
             padding-left: 16px;
             border-left: 3px solid #5865f2;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.fade-in-up {
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+
+        /* Markdown Styles */
+        .message-text b {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .message-text i {
+            font-style: italic;
+        }
+
+        .message-text s {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .message-text code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: #faa61a;
+            /* Discord-like yellow/orange */
+            font-size: 0.9em;
         }
 
         .message-image:hover {
@@ -476,6 +525,21 @@
             cursor: pointer;
             padding: 4px;
             color: #b9bbbe;
+            position: relative;
+        }
+
+        emoji-picker {
+            position: absolute;
+            bottom: 60px;
+            right: 0;
+            z-index: 100;
+            display: none;
+            --emoji-size: 1.5rem;
+            --background: #2f3136;
+        }
+
+        emoji-picker.show {
+            display: flex;
         }
 
         .icon-btn:hover {
@@ -924,6 +988,10 @@
                             <input type="file" id="fileInput" style="display: none;">
                             <button class="icon-btn" onclick="document.getElementById('fileInput').click()"
                                 title="Upload File">📎</button>
+                            <button class="icon-btn" id="emojiBtn" onclick="toggleEmojiPicker()" title="Add Emoji">
+                                😀
+                            </button>
+                            <emoji-picker class="dark"></emoji-picker>
                         </div>
                         <span class="char-count"><span id="charCount">0</span>/2000</span>
                     </div>
@@ -2105,7 +2173,7 @@
                 }
 
                 return `
-                <div class="message">
+                <div class="message fade-in-up">
                     <div class="message-avatar">
                         ${createAvatarHTML(msg.userAvatar, msg.userName, '40px')}
                     </div>
@@ -2144,7 +2212,7 @@
                 const messageArray = Object.entries(messages)
                     .map(([id, msg]) => ({ id, ...msg }))
                     .sort((a, b) => b.timestamp - a.timestamp);
-                
+
                 // Keep only last 20, delete the rest
                 if (messageArray.length > 20) {
                     const toDelete = messageArray.slice(20); // Get items beyond the 20th
@@ -2159,12 +2227,23 @@
         }
 
         function parseMessageText(text) {
-            const escaped = escapeHtml(text);
+            let content = escapeHtml(text);
+
+            // Markdown Processing
+            // Bold: **text**
+            content = content.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            // Italic: *text* (simple implementation, might catch inside words but improved for chat)
+            content = content.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<i>$1</i>');
+            // Strikethrough: ~~text~~
+            content = content.replace(/~~(.*?)~~/g, '<s>$1</s>');
+            // Inline Code: `text`
+            content = content.replace(/`(.*?)`/g, '<code>$1</code>');
+
             // Updated regex to also match data: URLs (Base64)
             const imageRegex = /((?:https?:\/\/[^\s]+(?:\.(?:png|jpg|jpeg|gif|webp|svg)|=s\d+-c)(?:\?[^\s]*)?)|(?:data:image\/[a-z]+;base64,[^\s]+))/gi;
 
-            return escaped.replace(imageRegex, (url) => {
-                return `<div><img src="${url}" class="message-image" onclick="window.open('${url}', '_blank')"></div>`;
+            return content.replace(imageRegex, (url) => {
+                return `<div style="margin-top: 4px; margin-bottom: 4px;"><img src="${url}" class="message-image" onclick="window.open('${url}', '_blank')"></div>`;
             });
         }
 
@@ -2297,6 +2376,52 @@
             const input = document.getElementById('messageInput');
             document.getElementById('charCount').textContent = input.value.length;
         }
+
+        // Emoji Picker Logic
+        function toggleEmojiPicker() {
+            const picker = document.querySelector('emoji-picker');
+            picker.classList.toggle('show');
+        }
+
+        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+            const input = document.getElementById('messageInput');
+            input.value += event.detail.unicode;
+            updateCharCount();
+            toggleEmojiPicker(); // Optional: close after selection
+            input.focus();
+        });
+
+        // Close picker when clicking outside
+        document.addEventListener('click', (e) => {
+            const picker = document.querySelector('emoji-picker');
+            const btn = document.getElementById('emojiBtn');
+            if (picker && btn && !picker.contains(e.target) && !btn.contains(e.target)) {
+                picker.classList.remove('show');
+            }
+        });
+
+        // Emoji Picker Logic
+        function toggleEmojiPicker() {
+            const picker = document.querySelector('emoji-picker');
+            picker.classList.toggle('show');
+        }
+
+        document.querySelector('emoji-picker').addEventListener('emoji-click', event => {
+            const input = document.getElementById('messageInput');
+            input.value += event.detail.unicode;
+            updateCharCount();
+            toggleEmojiPicker(); // Optional: close after selection
+            input.focus();
+        });
+
+        // Close picker when clicking outside
+        document.addEventListener('click', (e) => {
+            const picker = document.querySelector('emoji-picker');
+            const btn = document.getElementById('emojiBtn');
+            if (!picker.contains(e.target) && !btn.contains(e.target)) {
+                picker.classList.remove('show');
+            }
+        });
 
         function showCreateServerModal() {
             document.getElementById('createServerModal').classList.add('show');
@@ -2619,7 +2744,7 @@
                 const activityArray = Object.entries(activities)
                     .map(([id, data]) => ({ id, ...data }))
                     .sort((a, b) => b.timestamp - a.timestamp);
-                
+
                 // Keep only last 10, delete the rest
                 if (activityArray.length > 10) {
                     const toDelete = activityArray.slice(10); // Get items beyond the 10th
@@ -4083,11 +4208,11 @@
         async function DailyTasks() {
             // Clean up old activities
             await cleanupOldActivities();
-            
+
             // Clean up messages in all channels
             const servers = await firebase.database().ref('servers').once('value');
             const serversData = servers.val() || {};
-            
+
             for (const serverId in serversData) {
                 const server = serversData[serverId];
                 if (server.channels) {
@@ -4097,7 +4222,7 @@
                     }
                 }
             }
-            
+
             // Clean up DM channels
             const dms = await firebase.database().ref('chat/__dms__').once('value');
             const dmsData = dms.val() || {};
@@ -4105,7 +4230,7 @@
                 const path = `chat/__dms__/${dmId}`;
                 await cleanupOldMessages(path);
             }
-            
+
             console.log('DailyTasks: Cleanup completed');
         }
         // Check for calls every 30 seconds

@@ -168,32 +168,48 @@ async function smartLoadGame(id) {
         }
     }
 
-    // 3️Fallback guesses
-    const guesses = [
-        `https://mathlearnhub.github.io/files/flash/#${encodeURIComponent(id)}`,
+    // 3️Fallback guesses prioritized
+    const priorityPaths = [
         `https://mathlearnhub.github.io/files/${id}/index.html`,
+        `https://mathlearnhub.github.io/Learning-Tools/${id}/index.html`,
         `https://mathlearnhub.github.io/files/other/${id}/index.html`,
-        `https://mathlearnhub.github.io/Learning-Tools/${id}/index.html`
+        `https://mathlearnhub.github.io/files/flash/#${encodeURIComponent(id)}`
     ];
 
-    for (const path of guesses) {
-        const ok = await new Promise(resolve => {
-            const t = document.createElement("iframe");
-            t.style.display = "none";
-            t.onload = () => { t.remove(); resolve(true); };
-            t.onerror = () => { t.remove(); resolve(false); };
-            t.src = path;
-            document.body.appendChild(t);
-        });
+    for (const path of priorityPaths) {
+        try {
+            // Try a HEAD request first to check existence
+            const check = await fetch(path, { method: 'HEAD' });
+            if (check.ok) {
+                iframe.src = path;
+                console.log("Game found at:", path);
+                return;
+            }
+        } catch (e) {
+            // Fallback to iframe check if fetch fails (e.g. CORS)
+            const ok = await new Promise(resolve => {
+                const t = document.createElement("iframe");
+                t.style.display = "none";
+                t.onload = () => { t.remove(); resolve(true); };
+                t.onerror = () => { t.remove(); resolve(false); };
+                t.src = path;
+                document.body.appendChild(t);
+                // Timeout to prevent hanging
+                setTimeout(() => {
+                    if (document.body.contains(t)) { t.remove(); resolve(false); }
+                }, 3000);
+            });
 
-        if (ok) {
-            iframe.src = path;
-            console.log("Auto-healed:", path);
-            return;
+            if (ok) {
+                iframe.src = path;
+                console.log("Game found (via iframe check) at:", path);
+                return;
+            }
         }
     }
 
-    console.error("Game not found:", id);
+    console.error("Game definitely not found:", id);
+    throw new Error("Game not found after checking all paths.");
 }
 
 
