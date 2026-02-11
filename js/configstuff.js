@@ -167,7 +167,7 @@ async function checkPasscodeClick() {
       window.location.replace("https://www.google.com");
       return;
     }
-
+    document.cookie = "Code=true; path=/; max-age=" + 14 * 24 * 60 * 60; //2 days
     launchIframe(
       role === "admin"
         ? "./games.html?admin=True"
