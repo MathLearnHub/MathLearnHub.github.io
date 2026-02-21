@@ -1738,15 +1738,10 @@
             `;
         }
 
-        async function googleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                await firebase.auth().signInWithPopup(provider);
-            } catch (error) {
-                console.error("Login failed:", error);
-                alert("Login failed. Please try again.");
-            }
-        }
+        // Use the shared `googleLogin` implementation from `js/configstuff.js`.
+        // That file exposes `window.googleLogin` which handles role assignment
+        // and DB updates. We intentionally do not define a local googleLogin
+        // here so the global one is used by the Sign In button above.
 
         function checkBanStatus() {
             firebase.database().ref('banned/' + currentUser.uid).once('value', (snapshot) => {
