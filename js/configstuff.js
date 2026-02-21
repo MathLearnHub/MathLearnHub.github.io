@@ -72,7 +72,7 @@ function launchIframe(src) {
   console.log("[launchIframe] Iframe launched with src:", src);
 }
 
-async function googleLogin() {
+async function googleLogin(options = {}) {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
 
@@ -126,6 +126,14 @@ async function googleLogin() {
     }
 
     localStorage.setItem("uid", uid);
+
+    // If caller requested a redirect to the chat/talk page, do it now.
+    if (options && options.redirectToTalk) {
+      // Use a relative path to keep behavior consistent across hosting setups
+      window.location.href = './chats.html';
+      return null; // navigation will occur
+    }
+
     return role;
 
   } catch (error) {
